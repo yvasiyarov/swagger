@@ -125,6 +125,28 @@ func (parser *Parser) GetPackageAst(packagePath string) map[string]*ast.Package 
 	}
 }
 
+func (parser *Parser) AddOperation(op *Operation) {
+	path := []string{}
+	for _, pathPart := range strings.Split(op.Path, "/") {
+		if pathPart = strings.TrimSpace(pathPart); pathPart != "" {
+			path = append(path, pathPart)
+		}
+	}
+
+	api, ok := parser.TopLevelApis[path[0]]
+	if !ok {
+		api = NewApiDeclaration()
+		parser.TopLevelApis[path[0]] = api
+
+		apiRef := &ApiRef{
+			Path: "/" + path[0],
+		}
+		parser.Listing.Apis = append(parser.Listing.Apis, apiRef)
+	}
+
+	api.AddOperation(op)
+}
+
 func (parser *Parser) ParseApiDescription(packageName string) {
 	parser.CurrentPackage = packageName
 	pkgRealPath := GetRealPackagePath(packageName)
@@ -142,7 +164,8 @@ func (parser *Parser) ParseApiDescription(packageName string) {
 								log.Printf("Can not parse comment for function: %v, package: %v, got error: %v\n", astDeclaration.Name.String(), packageName, err)
 							}
 						} else {
-							log.Fatalf("Operation: %#v\n\n", operation)
+							parser.AddOperation(operation)
+							//	log.Fatalf("Operation: %#v\n\n", operation)
 							//				controllersList = append(controllersList, specDecl)
 						}
 					}

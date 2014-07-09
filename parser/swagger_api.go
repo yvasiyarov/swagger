@@ -56,10 +56,85 @@ type ApiDeclaration struct {
 	Models         map[string]*Model `json:"models,omitempty"`
 }
 
+func NewApiDeclaration() *ApiDeclaration {
+	return &ApiDeclaration{
+		Apis:     make([]*Api, 0),
+		Models:   make(map[string]*Model),
+		Consumes: make([]string, 0),
+		Produces: make([]string, 0),
+	}
+}
+
+func (api *ApiDeclaration) AddConsumedTypes(op *Operation) {
+	for _, contextType := range op.Consumes {
+		isExists := false
+		for _, existType := range api.Consumes {
+			if existType == contextType {
+				isExists = true
+				break
+			}
+		}
+		if !isExists {
+			api.Consumes = append(api.Consumes, contextType)
+		}
+	}
+}
+
+func (api *ApiDeclaration) AddProducesTypes(op *Operation) {
+	for _, contextType := range op.Produces {
+		isExists := false
+		for _, existType := range api.Produces {
+			if existType == contextType {
+				isExists = true
+				break
+			}
+		}
+		if !isExists {
+			api.Produces = append(api.Produces, contextType)
+		}
+	}
+}
+func (api *ApiDeclaration) AddModels(op *Operation) {
+	for _, m := range op.models {
+		if _, ok := api.Models[m.Id]; !ok {
+			api.Models[m.Id] = m
+		}
+	}
+}
+
+func (api *ApiDeclaration) AddSubApi(op *Operation) {
+
+	isExists := false
+	for _, subApi := range api.Apis {
+		if subApi.Path == op.Path {
+			isExists = true
+			break
+		}
+	}
+	if !isExists {
+		subApi := NewApi()
+		subApi.Path = op.Path
+		api.Apis = append(api.Apis, subApi)
+	}
+}
+
+func (api *ApiDeclaration) AddOperation(op *Operation) {
+	api.AddProducesTypes(op)
+	api.AddConsumedTypes(op)
+	api.AddModels(op)
+	api.AddSubApi(op)
+}
+
 type Api struct {
 	Path        string       `json:"path"` // relative or absolute, must start with /
 	Description string       `json:"description"`
 	Operations  []*Operation `json:"operations,omitempty"`
+}
+
+func NewApi() *Api {
+	return &Api{
+		Operations: make([]*Operation, 0),
+	}
 }
 
 type Operation struct {
