@@ -4,8 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"log"
-	"os"
+	//	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -95,9 +94,12 @@ func (api *ApiDeclaration) AddProducesTypes(op *Operation) {
 	}
 }
 func (api *ApiDeclaration) AddModels(op *Operation) {
+	//	log.Fatalf("OP models: %#v\n API: %#v\n", op.models, api.Models)
 	for _, m := range op.models {
-		if _, ok := api.Models[m.Id]; !ok {
-			api.Models[m.Id] = m
+		if m != nil {
+			if _, ok := api.Models[m.Id]; !ok {
+				api.Models[m.Id] = m
+			}
 		}
 	}
 }
@@ -163,7 +165,7 @@ func NewOperation(p *Parser, packageName string) *Operation {
 		packageName: packageName,
 	}
 }
-func (operation *Operation) ParseComment(commentList *ast.CommentGroup, funcName string) error {
+func (operation *Operation) ParseComment(commentList *ast.CommentGroup) error {
 	if commentList != nil && commentList.List != nil {
 		for _, comment := range commentList.List {
 			//log.Printf("Parse comemnt: %#v\n", c)
@@ -322,10 +324,10 @@ func (operation *Operation) ParseSuccessComment(commentLine string) error {
 		}
 		model := NewModel(operation.parser)
 		modelName := parts[2]
-		if !strings.HasPrefix(modelName, operation.packageName) {
-			modelName = operation.packageName + "." + modelName
-		}
-		if err, innerModels := model.ParseModel(modelName); err != nil {
+		//		if !strings.HasPrefix(modelName, operation.packageName) {
+		//			modelName = operation.packageName + "." + modelName
+		//		}
+		if err, innerModels := model.ParseModel(modelName, operation.parser.CurrentPackage); err != nil {
 			return err
 		} else {
 			operation.models = append(operation.models, model)
@@ -385,93 +387,101 @@ func NewModel(p *Parser) *Model {
 	}
 }
 
-func ParserFileFilter(info os.FileInfo) bool {
-	name := info.Name()
-	return !info.IsDir() && !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go")
-}
+// modelName is something like package.subpackage.SomeModel or just "subpackage.SomeModel"
+func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*Model) {
+	//log.Printf("ParseModel: %s, CurrentPackage %s \n", modelName, currentPackage)
 
-func (m *Model) ParseModel(fullModelName string) (error, []*Model) {
-	//pkgpath, objectname string, m swagger.Model, realTypes []string
+	astTypeSpec, modelPackage := m.parser.FindModelDefinition(modelName, currentPackage)
 
-	fullNameParts := strings.Split(fullModelName, ".")
-	modelName := fullNameParts[len(fullNameParts)-1]
-	m.context.fullPackageName = strings.Join(fullNameParts[:len(fullNameParts)-1], "/")
+	//fullNameParts := strings.Split(fullModelName, ".")
+	//modelName := fullNameParts[len(fullNameParts)-1]
+	//m.context.fullPackageName = strings.Join(fullNameParts[:len(fullNameParts)-1], "/")
 
-	log.Printf("Model name: %s , %s \n", fullModelName, m.context.fullPackageName)
+	//log.Printf("Model name: %s , %s \n", fullModelName, m.context.fullPackageName)
+	modelNameParts := strings.Split(modelName, ".")
+	m.Id = strings.Join(append(strings.Split(modelPackage, "/"), modelNameParts[len(modelNameParts)-1]), ".")
 
-	pkgRealPath := GetRealPackagePath(m.context.fullPackageName)
-	astPackageList := m.parser.GetPackageAst(pkgRealPath)
+	var innerModelList []*Model
+	if astStructType, ok := astTypeSpec.Type.(*ast.StructType); ok {
+		m.ParseFieldList(astStructType.Fields.List, modelPackage)
+		usedTypes := make(map[string]bool)
 
-	for _, astPackage := range astPackageList {
-		for _, astFile := range astPackage.Files {
-			for objectName, astScopeObject := range astFile.Scope.Objects {
-				if astScopeObject.Kind != ast.Typ || objectName != modelName {
-					continue
-				}
-				astTypeSpec, ok := astScopeObject.Decl.(*ast.TypeSpec)
-				if !ok {
-					return fmt.Errorf("Unknown type without TypeSec: %#v", astTypeSpec), nil
-				}
-				astStructType, ok := astTypeSpec.Type.(*ast.StructType)
-				if !ok {
-					continue
-				}
+		for _, property := range m.Properties {
+			typeName := strings.Trim(property.Type, "[]")
+			if property.IsBasicType(typeName) {
+				continue
+			}
 
-				m.Id = objectName
-				innerModelList := m.ParseFieldList(astStructType.Fields.List)
-				return nil, innerModelList
+			usedTypes[typeName] = true
+		}
+
+		//log.Printf("Before parse inner model list: %#v\n (%s)", usedTypes, modelName)
+		innerModelList = make([]*Model, len(usedTypes))
+
+		for typeName, _ := range usedTypes {
+			typeModel := NewModel(m.parser)
+			if err, typeInnerModels := typeModel.ParseModel(typeName, modelPackage); err != nil {
+				//log.Printf("Parse Inner Model error %#v \n", err)
+				return err, nil
+			} else {
+				//log.Printf("Inner model %v parsed, parsing %s \n", typeName, modelName)
+
+				innerModelList = append(innerModelList, typeModel)
+				innerModelList = append(innerModelList, typeInnerModels...)
 			}
 		}
+		//log.Printf("After parse inner model list: %#v\n (%s)", usedTypes, modelName)
+		//log.Fatalf("Inner model list: %#v\n", innerModelList)
+
 	}
-	return fmt.Errorf("Can't find the object: %v ", fullModelName), nil
+
+	//log.Printf("ParseModel finished %s \n", modelName)
+	return nil, innerModelList
 }
 
-func (m *Model) ParseFieldList(fieldList []*ast.Field) []*Model {
-	innerModelList := make([]*Model, 0)
-
+func (m *Model) ParseFieldList(fieldList []*ast.Field, modelPackage string) {
 	if fieldList == nil {
-		return nil
+		return
 	}
+	//log.Printf("ParseFieldList\n")
+
 	m.Properties = make(map[string]*ModelProperty)
 	for _, field := range fieldList {
-		innerModels := m.ParseModelProperty(field)
-		if innerModels != nil {
-			innerModelList = append(innerModelList, innerModels...)
-		}
+		m.ParseModelProperty(field, modelPackage)
 	}
-	return innerModelList
 }
 
-func (m *Model) ParseModelProperty(field *ast.Field) []*Model {
+func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 	var name string
-	innerModelList := make([]*Model, 0)
+	var innerModel *Model
 
 	property := NewModelProperty()
-	property.Type = property.GetTypeAsString(field)
+	//log.Printf("field: %#v", field)
+	property.Type = property.GetTypeAsString(field.Type)
 
-	//realTypes = append(realTypes, realType)
-	// if the tag contains json tag, set the name to the left most json tag
-	//TODO: contribute back to beego
 	if len(field.Names) == 0 {
-		//TODO: look up this type and analyse its fields!
+		//name is not specified, so struct is "embeded" in our model
 		if astSelectorExpr, ok := field.Type.(*ast.SelectorExpr); ok {
-			name = strings.TrimPrefix(astSelectorExpr.Sel.Name, "*")
-			innerModel := NewModel(m.parser)
-			if strings.Index(name, ".") == -1 {
-				innerModel.ParseModel(m.context.fullPackageName + "." + name)
+			astTypeIdent, _ := astSelectorExpr.X.(*ast.Ident)
 
-				for innerFieldName, innerField := range innerModel.Properties {
-					m.Properties[innerFieldName] = innerField
-				}
-				m.Required = append(m.Required, innerModel.Required...)
-				innerModelList = append(innerModelList, innerModel)
-			} else {
-				log.Fatalf("Parsing inner structures from other packages is not yet implemented")
+			name = astTypeIdent.Name + "." + strings.TrimPrefix(astSelectorExpr.Sel.Name, "*")
+
+			innerModel = NewModel(m.parser)
+			//log.Printf("Try to parse embeded type %s \n", name)
+			//log.Fatalf("DEBUG: field: %#v\n, selector.X: %#v\n selector.Sel: %#v\n", field, astSelectorExpr.X, astSelectorExpr.Sel)
+			innerModel.ParseModel(name, modelPackage)
+
+			for innerFieldName, innerField := range innerModel.Properties {
+				m.Properties[innerFieldName] = innerField
 			}
+			m.Required = append(m.Required, innerModel.Required...)
 		}
 	} else {
 		name = field.Names[0].Name
 	}
+
+	//log.Printf("ParseModelProperty: %s, CurrentPackage %s, type: %s \n", name, modelPackage, property.Type)
+	//Analyse struct fields annotations
 	if field.Tag != nil {
 		structTag := reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
 		if tag := structTag.Get("json"); tag != "" {
@@ -491,7 +501,6 @@ func (m *Model) ParseModelProperty(field *ast.Field) []*Model {
 		}
 	}
 	m.Properties[name] = property
-	return innerModelList
 }
 
 type ModelProperty struct {
@@ -530,26 +539,28 @@ var basicTypes = map[string]bool{
 
 func (p *ModelProperty) IsBasicType(typeName string) bool {
 	_, ok := basicTypes[typeName]
-	return ok
+	return ok || strings.Contains(typeName, "interface")
 }
 
-func (p *ModelProperty) GetTypeAsString(field *ast.Field) string {
+func (p *ModelProperty) GetTypeAsString(fieldType interface{}) string {
 	var realType string
-	if astArrayType, ok := field.Type.(*ast.ArrayType); ok {
-		if p.IsBasicType(fmt.Sprint(astArrayType.Elt)) {
-			realType = fmt.Sprintf("[]%v", astArrayType.Elt)
-		} else if astMapType, ok := astArrayType.Elt.(*ast.MapType); ok {
-			realType = fmt.Sprintf("map[%v][%v]", astMapType.Key, astMapType.Value)
-		} else if astStarExpr, ok := astArrayType.Elt.(*ast.StarExpr); ok {
-			realType = fmt.Sprint("[]%v", astStarExpr.X)
-		} else {
-			realType = fmt.Sprint("[]%v", astArrayType.Elt)
-		}
+	if astArrayType, ok := fieldType.(*ast.ArrayType); ok {
+		//		log.Printf("arrayType: %#v\n", astArrayType)
+		realType = fmt.Sprintf("[]%v", p.GetTypeAsString(astArrayType.Elt))
+	} else if _, ok := fieldType.(*ast.InterfaceType); ok {
+		realType = "interface"
 	} else {
-		if astStarExpr, ok := field.Type.(*ast.StarExpr); ok {
+		if astStarExpr, ok := fieldType.(*ast.StarExpr); ok {
 			realType = fmt.Sprint(astStarExpr.X)
+			//			log.Printf("Get type as string (star expression)! %#v, type: %s\n", astStarExpr.X, fmt.Sprint(astStarExpr.X))
+		} else if astSelectorExpr, ok := fieldType.(*ast.SelectorExpr); ok {
+			packageNameIdent, _ := astSelectorExpr.X.(*ast.Ident)
+			realType = packageNameIdent.Name + "." + astSelectorExpr.Sel.Name
+
+			//			log.Printf("Get type as string(selector expression)! X: %#v , Sel: %#v, type %s\n", astSelectorExpr.X, astSelectorExpr.Sel, realType)
 		} else {
-			realType = fmt.Sprint(field.Type)
+			//			log.Printf("Get type as string(no star expression)! %#v , type: %s\n", fieldType, fmt.Sprint(fieldType))
+			realType = fmt.Sprint(fieldType)
 		}
 	}
 	return realType

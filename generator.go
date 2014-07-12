@@ -25,6 +25,7 @@ func main() {
 	}
 
 	parser.ParseGeneralApiInfo(path.Join(gopath, "src", *mainApiFile))
+	parser.ParseTypeDefinitions(*apiPackage)
 	parser.ParseApiDescription(*apiPackage)
 
 	log.Println(string(parser.GetResourceListingJson()))
