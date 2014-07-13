@@ -53,6 +53,11 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 				//log.Printf("Parse Inner Model error %#v \n", err)
 				return err, nil
 			} else {
+				for _, property := range m.Properties {
+					if property.Type == typeName {
+						property.Type = typeModel.Id
+					}
+				}
 				//log.Printf("Inner model %v parsed, parsing %s \n", typeName, modelName)
 
 				innerModelList = append(innerModelList, typeModel)

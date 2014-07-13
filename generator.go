@@ -17,6 +17,7 @@ var basePath = flag.String("basePath", "http://127.0.0.1:3000", "Web service bas
 
 var generatedFileTemplate = `
 package main
+//This file is generated automatically. Dont try to edit it manually.
 
 var resourceListingJson = {{resourceListing}}
 var apiDescriptionsJson = {{apiDescriptions}}

@@ -30,6 +30,16 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ApiDescriptionHandler(w http.ResponseWriter, r *http.Request) {
+	apiKey := strings.Trim(r.RequestURI, "/")
+
+	if json, ok := apiDescriptionsJson[apiKey]; ok {
+		w.Write([]byte(json))
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -39,10 +49,8 @@ func main() {
 	http.HandleFunc("/", IndexHandler)
 	http.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("./swagger-ui"))))
 
-	for apiKey, apiJson := range apiDescriptionsJson {
-		http.HandleFunc("/"+apiKey+"/", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(apiJson))
-		})
+	for apiKey, _ := range apiDescriptionsJson {
+		http.HandleFunc("/"+apiKey+"/", ApiDescriptionHandler)
 	}
 
 	listenTo := *host + ":" + *port
