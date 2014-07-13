@@ -21,6 +21,7 @@ type Parser struct {
 	TypeDefinitions  map[string]map[string]*ast.TypeSpec
 	PackagePathCache map[string]string
 	PackageImports   map[string]map[string]string
+	BasePath         string
 }
 
 func NewParser() *Parser {
@@ -47,6 +48,7 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	}
 
 	parser.Listing.SwaggerVersion = SwaggerVersion
+	parser.Listing.BasePath = parser.BasePath
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
 			for _, commentLine := range strings.Split(comment.Text(), "\n") {
@@ -168,10 +170,16 @@ func (parser *Parser) AddOperation(op *Operation) {
 	api, ok := parser.TopLevelApis[path[0]]
 	if !ok {
 		api = NewApiDeclaration()
+
+		api.ApiVersion = parser.Listing.ApiVersion
+		api.SwaggerVersion = SwaggerVersion
+		api.ResourcePath = "/" + path[0] + "/"
+		api.BasePath = parser.BasePath
+
 		parser.TopLevelApis[path[0]] = api
 
 		apiRef := &ApiRef{
-			Path: "/" + path[0],
+			Path: api.ResourcePath,
 		}
 		parser.Listing.Apis = append(parser.Listing.Apis, apiRef)
 	}
