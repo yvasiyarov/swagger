@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"github.com/yvasiyarov/swagger/parser"
+	"go/ast"
 	"log"
 	"os"
 	"path"
@@ -23,25 +25,17 @@ var resourceListingJson = {{resourceListing}}
 var apiDescriptionsJson = {{apiDescriptions}}
 `
 
-func main() {
-	flag.Parse()
-	if *apiPackage == "" || *mainApiFile == "" {
-		flag.PrintDefaults()
-		return
+func IsController(funcDeclaration *ast.FuncDecl) bool {
+	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
+		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
+			receiverName := fmt.Sprint(starExpression.X)
+			return strings.Index(receiverName, "Context") != -1
+		}
 	}
-	parser := parser.NewParser()
+	return false
+}
 
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		log.Fatalf("Please, set $GOPATH environment variable\n")
-	}
-
-	parser.BasePath = *basePath
-	parser.ParseGeneralApiInfo(path.Join(gopath, "src", *mainApiFile))
-	parser.ParseTypeDefinitions(*apiPackage)
-	parser.ParseApiDescription(*apiPackage)
-
-	//os.Mkdir(path.Join(curpath, "docs"), 0755)
+func generateSwaggerDocs(parser *parser.Parser) {
 	fd, err := os.Create(path.Join("./", "docs.go"))
 	if err != nil {
 		log.Fatalf("Can not create document file: %v\n", err)
@@ -65,7 +59,31 @@ func main() {
 	doc = strings.Replace(doc, "{{apiDescriptions}}", "map[string]string{"+apiDescriptions.String()+"}", -1)
 
 	fd.WriteString(doc)
+}
+
+func main() {
+	flag.Parse()
+	if *apiPackage == "" || *mainApiFile == "" {
+		flag.PrintDefaults()
+		return
+	}
+	parser := parser.NewParser()
+
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		log.Fatalf("Please, set $GOPATH environment variable\n")
+	}
+
+	parser.BasePath = *basePath
+	parser.IsController = IsController
+
+	log.Println("Start parsing")
+	parser.ParseGeneralApiInfo(path.Join(gopath, "src", *mainApiFile))
+	parser.ParseTypeDefinitions(*apiPackage)
+	parser.ParseApiDescription(*apiPackage)
+
+	log.Println("Finish parsing")
+	generateSwaggerDocs(parser)
+
 	log.Println("Doc file generated")
-	//log.Println(string(parser.GetResourceListingJson()))
-	//log.Println(string(parser.GetApiDescriptionJson()))
 }

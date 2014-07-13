@@ -2,7 +2,6 @@ package parser
 
 import (
 	"encoding/json"
-	"fmt"
 	"go/ast"
 	goparser "go/parser"
 	"go/token"
@@ -23,6 +22,7 @@ type Parser struct {
 	PackagePathCache map[string]string
 	PackageImports   map[string]map[string]string
 	BasePath         string
+	IsController     func(*ast.FuncDecl) bool
 }
 
 func NewParser() *Parser {
@@ -88,15 +88,6 @@ func (parser *Parser) GetApiDescriptionJson() []byte {
 	return json
 }
 
-func (parser *Parser) IsController(funcDeclaration *ast.FuncDecl) bool {
-	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
-		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
-			receiverName := fmt.Sprint(starExpression.X)
-			return strings.Index(receiverName, "Context") != -1
-		}
-	}
-	return false
-}
 func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 	packagePath = strings.Trim(packagePath, "\"")
 
