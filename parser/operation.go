@@ -71,6 +71,10 @@ func (operation *Operation) ParseComment(commentList *ast.CommentGroup) error {
 	} else {
 		return CommentIsEmptyError
 	}
+
+	if operation.Path == "" {
+		return CommentIsEmptyError
+	}
 	return nil
 }
 

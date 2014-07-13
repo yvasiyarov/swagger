@@ -322,6 +322,7 @@ func (parser *Parser) ParseApiDescription(packageName string) {
 								log.Printf("Can not parse comment for function: %v, package: %v, got error: %v\n", astDeclaration.Name.String(), packageName, err)
 							}
 						} else {
+							//log.Printf("Parsed comment: %#v\n", astDeclaration.Doc)
 							parser.AddOperation(operation)
 						}
 					}
@@ -344,7 +345,7 @@ func (parser *Parser) ParseSubApiDescription(commentLine string) {
 	} else {
 		commentLine = strings.TrimSpace(commentLine[len("@SubApi"):])
 	}
-	re := regexp.MustCompile(`([\w\s]+)\[{1}([\w/]+)`)
+	re := regexp.MustCompile(`([\w\s]+)\[{1}([\w\_\-/]+)`)
 
 	if matches := re.FindStringSubmatch(commentLine); len(matches) != 3 {
 		log.Printf("Can not parse sub api description %s, skipped", commentLine)
