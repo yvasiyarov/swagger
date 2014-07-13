@@ -22,11 +22,11 @@ const (
 var CommentIsEmptyError = errors.New("Comment is empty")
 
 type ResourceListing struct {
-	ApiVersion     string     `json:"apiVersion"`
-	SwaggerVersion string     `json:"swaggerVersion"`
-	BasePath       string     `json:"basePath"`
-	Apis           []*ApiRef  `json:"apis"`
-	Infos          Infomation `json:"info"`
+	ApiVersion     string `json:"apiVersion"`
+	SwaggerVersion string `json:"swaggerVersion"`
+	//	BasePath       string     `json:"basePath"`
+	Apis  []*ApiRef  `json:"apis"`
+	Infos Infomation `json:"info"`
 }
 
 type ApiRef struct {
@@ -105,19 +105,20 @@ func (api *ApiDeclaration) AddModels(op *Operation) {
 }
 
 func (api *ApiDeclaration) AddSubApi(op *Operation) {
-
-	isExists := false
-	for _, subApi := range api.Apis {
-		if subApi.Path == op.Path {
-			isExists = true
+	var subApi *Api
+	for _, existsSubApi := range api.Apis {
+		if existsSubApi.Path == op.Path {
+			subApi = existsSubApi
 			break
 		}
 	}
-	if !isExists {
-		subApi := NewApi()
+	if subApi == nil {
+		subApi = NewApi()
 		subApi.Path = op.Path
+
 		api.Apis = append(api.Apis, subApi)
 	}
+	subApi.Operations = append(subApi.Operations, op)
 }
 
 func (api *ApiDeclaration) AddOperation(op *Operation) {
@@ -135,7 +136,8 @@ type Api struct {
 
 func NewApi() *Api {
 	return &Api{
-		Operations: make([]*Operation, 0),
+		Operations:  make([]*Operation, 0),
+		Description: "Test subAPi description",
 	}
 }
 
@@ -392,10 +394,6 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 	//log.Printf("ParseModel: %s, CurrentPackage %s \n", modelName, currentPackage)
 
 	astTypeSpec, modelPackage := m.parser.FindModelDefinition(modelName, currentPackage)
-
-	//fullNameParts := strings.Split(fullModelName, ".")
-	//modelName := fullNameParts[len(fullNameParts)-1]
-	//m.context.fullPackageName = strings.Join(fullNameParts[:len(fullNameParts)-1], "/")
 
 	//log.Printf("Model name: %s , %s \n", fullModelName, m.context.fullPackageName)
 	modelNameParts := strings.Split(modelName, ".")

@@ -48,7 +48,7 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	}
 
 	parser.Listing.SwaggerVersion = SwaggerVersion
-	parser.Listing.BasePath = parser.BasePath
+	//parser.Listing.BasePath = parser.BasePath
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
 			for _, commentLine := range strings.Split(comment.Text(), "\n") {
@@ -173,13 +173,14 @@ func (parser *Parser) AddOperation(op *Operation) {
 
 		api.ApiVersion = parser.Listing.ApiVersion
 		api.SwaggerVersion = SwaggerVersion
-		api.ResourcePath = "/" + path[0] + "/"
+		api.ResourcePath = "/" + path[0]
 		api.BasePath = parser.BasePath
 
 		parser.TopLevelApis[path[0]] = api
 
 		apiRef := &ApiRef{
-			Path: api.ResourcePath,
+			Path:        api.ResourcePath,
+			Description: "API REf test description",
 		}
 		parser.Listing.Apis = append(parser.Listing.Apis, apiRef)
 	}
