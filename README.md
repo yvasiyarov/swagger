@@ -30,7 +30,8 @@ It consists from following comments:
     // @LicenseUrl http://opensource.org/licenses/BSD-2-Clause
 
 
-TODO:
+TODO
+----
 1. Add unit tests.
 2. Write better documentation
 3. Write examples of API
@@ -38,8 +39,11 @@ TODO:
 5. Investigate how we should work with arrays/slices/maps
 6. Add possibility to parse API, which consists of one and more package
 7. Add possibility to pass "controller filter function" as parameter 
+8. Refactor comment parsing, I should use reg exp for this purposes
 
-PS
-Interface types will never be supported:
-interfaces: its not possible to understand to which actual value interface will be referenced. All interface values displayed just as "interface" 
+Known limitations
+-------
+* Interface types will never be supported because not possible to understand to which actual value interface will reference. All interface values displayed just as "interface" 
+* Types which implement Marshaler/Unmarshaler interface. Marshaling of this types will produce unpredicable(at parsing time) JSON
+
 

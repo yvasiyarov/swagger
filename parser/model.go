@@ -108,7 +108,7 @@ func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 			for innerFieldName, innerField := range innerModel.Properties {
 				m.Properties[innerFieldName] = innerField
 			}
-			m.Required = append(m.Required, innerModel.Required...)
+			return
 		}
 	} else {
 		name = field.Names[0].Name
