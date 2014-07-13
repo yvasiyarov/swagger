@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -48,7 +49,6 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	}
 
 	parser.Listing.SwaggerVersion = SwaggerVersion
-	//parser.Listing.BasePath = parser.BasePath
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
 			for _, commentLine := range strings.Split(comment.Text(), "\n") {
@@ -179,8 +179,7 @@ func (parser *Parser) AddOperation(op *Operation) {
 		parser.TopLevelApis[path[0]] = api
 
 		apiRef := &ApiRef{
-			Path:        api.ResourcePath,
-			Description: "API REf test description",
+			Path: api.ResourcePath,
 		}
 		parser.Listing.Apis = append(parser.Listing.Apis, apiRef)
 	}
@@ -248,9 +247,6 @@ func (parser *Parser) ParseImportStatements(packageName string) map[string]bool 
 			}
 		}
 	}
-	//	if strings.Contains(packageName, "lazada_api/model") {
-	//		log.Printf("parse imports from %s, got %#v\n", packageName, parser.PackageImports[pkgRealPath])
-	//	}
 	return imports
 }
 
@@ -327,11 +323,35 @@ func (parser *Parser) ParseApiDescription(packageName string) {
 							}
 						} else {
 							parser.AddOperation(operation)
-							//	log.Fatalf("Operation: %#v\n\n", operation)
-							//				controllersList = append(controllersList, specDecl)
 						}
 					}
 				}
+			}
+			for _, astComment := range astFile.Comments {
+				for _, commentLine := range strings.Split(astComment.Text(), "\n") {
+					parser.ParseSubApiDescription(commentLine)
+				}
+			}
+		}
+	}
+}
+
+// Parse sub api declaration
+// @SubApi Very fance API [/fancy-api]
+func (parser *Parser) ParseSubApiDescription(commentLine string) {
+	if !strings.HasPrefix(commentLine, "@SubApi") {
+		return
+	} else {
+		commentLine = strings.TrimSpace(commentLine[len("@SubApi"):])
+	}
+	re := regexp.MustCompile(`([\w\s]+)\[{1}([\w/]+)`)
+
+	if matches := re.FindStringSubmatch(commentLine); len(matches) != 3 {
+		log.Printf("Can not parse sub api description %s, skipped", commentLine)
+	} else {
+		for _, ref := range parser.Listing.Apis {
+			if ref.Path == matches[2] {
+				ref.Description = strings.TrimSpace(matches[1])
 			}
 		}
 	}

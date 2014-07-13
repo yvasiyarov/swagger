@@ -13,17 +13,11 @@ type Model struct {
 	Required   []string                  `json:"required,omitempty"`
 	Properties map[string]*ModelProperty `json:"properties"`
 	parser     *Parser
-	context    *ModelContext
-}
-type ModelContext struct {
-	fullPackageName string
-	//TODO: import list
 }
 
 func NewModel(p *Parser) *Model {
 	return &Model{
-		parser:  p,
-		context: &ModelContext{},
+		parser: p,
 	}
 }
 
@@ -33,7 +27,6 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 
 	astTypeSpec, modelPackage := m.parser.FindModelDefinition(modelName, currentPackage)
 
-	//log.Printf("Model name: %s , %s \n", fullModelName, m.context.fullPackageName)
 	modelNameParts := strings.Split(modelName, ".")
 	m.Id = strings.Join(append(strings.Split(modelPackage, "/"), modelNameParts[len(modelNameParts)-1]), ".")
 

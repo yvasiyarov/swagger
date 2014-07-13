@@ -44,28 +44,8 @@ type Api struct {
 
 func NewApi() *Api {
 	return &Api{
-		Operations:  make([]*Operation, 0),
-		Description: "Test subAPi description",
+		Operations: make([]*Operation, 0),
 	}
-}
-
-type Operation struct {
-	HttpMethod string `json:"httpMethod"`
-	Nickname   string `json:"nickname"`
-	Type       string `json:"type"` // in 1.1 = DataType
-	// ResponseClass    string            `json:"responseClass"` obsolete in 1.2
-	Summary          string            `json:"summary,omitempty"`
-	Notes            string            `json:"notes,omitempty"`
-	Parameters       []Parameter       `json:"parameters,omitempty"`
-	ResponseMessages []ResponseMessage `json:"responseMessages,omitempty"` // optional
-	Consumes         []string          `json:"consumes,omitempty"`
-	Produces         []string          `json:"produces,omitempty"`
-	Authorizations   []Authorization   `json:"authorizations,omitempty"`
-	Protocols        []Protocol        `json:"protocols,omitempty"`
-	Path             string            `json:`
-	parser           *Parser
-	models           []*Model
-	packageName      string
 }
 
 type Protocol struct {
