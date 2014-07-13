@@ -14,15 +14,16 @@ import (
 )
 
 type Parser struct {
-	Listing          *ResourceListing
-	TopLevelApis     map[string]*ApiDeclaration
-	PackagesCache    map[string]map[string]*ast.Package
-	CurrentPackage   string
-	TypeDefinitions  map[string]map[string]*ast.TypeSpec
-	PackagePathCache map[string]string
-	PackageImports   map[string]map[string]string
-	BasePath         string
-	IsController     func(*ast.FuncDecl) bool
+	Listing                           *ResourceListing
+	TopLevelApis                      map[string]*ApiDeclaration
+	PackagesCache                     map[string]map[string]*ast.Package
+	CurrentPackage                    string
+	TypeDefinitions                   map[string]map[string]*ast.TypeSpec
+	PackagePathCache                  map[string]string
+	PackageImports                    map[string]map[string]string
+	BasePath                          string
+	IsController                      func(*ast.FuncDecl) bool
+	TypesImplementingMarshalInterface map[string]string
 }
 
 func NewParser() *Parser {
@@ -31,12 +32,18 @@ func NewParser() *Parser {
 			Infos: Infomation{},
 			Apis:  make([]*ApiRef, 0),
 		},
-		PackagesCache:    make(map[string]map[string]*ast.Package),
-		TopLevelApis:     make(map[string]*ApiDeclaration),
-		TypeDefinitions:  make(map[string]map[string]*ast.TypeSpec),
-		PackagePathCache: make(map[string]string),
-		PackageImports:   make(map[string]map[string]string),
+		PackagesCache:                     make(map[string]map[string]*ast.Package),
+		TopLevelApis:                      make(map[string]*ApiDeclaration),
+		TypeDefinitions:                   make(map[string]map[string]*ast.TypeSpec),
+		PackagePathCache:                  make(map[string]string),
+		PackageImports:                    make(map[string]map[string]string),
+		TypesImplementingMarshalInterface: make(map[string]string),
 	}
+}
+
+func (parser *Parser) IsImplementMarshalInterface(typeName string) bool {
+	_, ok := parser.TypesImplementingMarshalInterface[typeName]
+	return ok
 }
 
 //Read web/main.go to get General info

@@ -37,7 +37,7 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 
 		for _, property := range m.Properties {
 			typeName := strings.Trim(property.Type, "[]")
-			if property.IsBasicType(typeName) {
+			if property.IsBasicType(typeName) || m.parser.IsImplementMarshalInterface(typeName) {
 				continue
 			}
 

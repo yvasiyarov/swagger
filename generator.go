@@ -25,6 +25,7 @@ var resourceListingJson = {{resourceListing}}
 var apiDescriptionsJson = {{apiDescriptions}}
 `
 
+// It must return true if funcDeclaration is controller. We will try to parse only comments before controllers
 func IsController(funcDeclaration *ast.FuncDecl) bool {
 	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
 		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
@@ -61,21 +62,32 @@ func generateSwaggerDocs(parser *parser.Parser) {
 	fd.WriteString(doc)
 }
 
+func InitParser() *parser.Parser {
+	parser := parser.NewParser()
+
+	parser.BasePath = *basePath
+	parser.IsController = IsController
+
+	parser.TypesImplementingMarshalInterface["NullString"] = "string"
+	parser.TypesImplementingMarshalInterface["NullInt64"] = "int"
+	parser.TypesImplementingMarshalInterface["NullFloat64"] = "float"
+	parser.TypesImplementingMarshalInterface["NullBool"] = "bool"
+
+	return parser
+}
+
 func main() {
 	flag.Parse()
 	if *apiPackage == "" || *mainApiFile == "" {
 		flag.PrintDefaults()
 		return
 	}
-	parser := parser.NewParser()
 
+	parser := InitParser()
 	gopath := os.Getenv("GOPATH")
 	if gopath == "" {
 		log.Fatalf("Please, set $GOPATH environment variable\n")
 	}
-
-	parser.BasePath = *basePath
-	parser.IsController = IsController
 
 	log.Println("Start parsing")
 	parser.ParseGeneralApiInfo(path.Join(gopath, "src", *mainApiFile))
