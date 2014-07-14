@@ -10,6 +10,7 @@ import (
 
 var host = flag.String("host", "127.0.0.1", "Host")
 var port = flag.String("port", "8080", "Port")
+var staticContent = flag.String("staticPath", "./swagger-ui", "Path to folder with Swagger UI")
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	isJsonRequest := false
@@ -47,7 +48,7 @@ func main() {
 	// path (/tmpfiles/), use StripPrefix to modify the request
 	// URL's path before the FileServer sees it:
 	http.HandleFunc("/", IndexHandler)
-	http.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("./swagger-ui"))))
+	http.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir(*staticContent))))
 
 	for apiKey, _ := range apiDescriptionsJson {
 		http.HandleFunc("/"+apiKey+"/", ApiDescriptionHandler)
