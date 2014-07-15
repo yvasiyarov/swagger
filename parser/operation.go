@@ -10,14 +10,14 @@ import (
 )
 
 type Operation struct {
-	HttpMethod string `json:"httpMethod"`
-	Nickname   string `json:"nickname"`
-	Type       string `json:"type"` // in 1.1 = DataType
-	// ResponseClass    string            `json:"responseClass"` obsolete in 1.2
+	HttpMethod       string            `json:"httpMethod"`
+	Nickname         string            `json:"nickname"`
+	Type             string            `json:"type"`
+	Items            OperationItems    `json:"items,omitempty"`
 	Summary          string            `json:"summary,omitempty"`
 	Notes            string            `json:"notes,omitempty"`
 	Parameters       []Parameter       `json:"parameters,omitempty"`
-	ResponseMessages []ResponseMessage `json:"responseMessages,omitempty"` // optional
+	ResponseMessages []ResponseMessage `json:"responseMessages,omitempty"`
 	Consumes         []string          `json:"consumes,omitempty"`
 	Produces         []string          `json:"produces,omitempty"`
 	Authorizations   []Authorization   `json:"authorizations,omitempty"`
@@ -27,6 +27,9 @@ type Operation struct {
 	models           []*Model
 	packageName      string
 }
+type OperationItems struct {
+	Ref string `json:"$ref,omitempty"`
+}
 
 func NewOperation(p *Parser, packageName string) *Operation {
 	return &Operation{
@@ -35,6 +38,11 @@ func NewOperation(p *Parser, packageName string) *Operation {
 		packageName: packageName,
 	}
 }
+
+func (operation *Operation) SetItemsType(itemsType string) {
+	operation.Items = OperationItems{Ref: itemsType}
+}
+
 func (operation *Operation) ParseComment(commentList *ast.CommentGroup) error {
 	if commentList != nil && commentList.List != nil {
 		for _, comment := range commentList.List {
@@ -60,8 +68,6 @@ func (operation *Operation) ParseComment(commentList *ast.CommentGroup) error {
 				if err := operation.ParseFailureComment(commentLine); err != nil {
 					return err
 				}
-			} else if strings.HasPrefix(commentLine, "@Type") {
-				operation.Type = strings.TrimSpace(commentLine[len("@Type"):])
 			} else if strings.HasPrefix(commentLine, "@Accept") {
 				if err := operation.ParseAcceptComment(commentLine); err != nil {
 					return err
@@ -192,7 +198,7 @@ func (operation *Operation) ParseSuccessComment(commentLine string) error {
 		response.Code = code
 	}
 
-	if parts[1] == "{object}" {
+	if parts[1] == "{object}" || parts[1] == "{array}" {
 		if len(parts) < 3 {
 			return errors.New("Success annotation error: object type must be specified")
 		}
@@ -202,6 +208,12 @@ func (operation *Operation) ParseSuccessComment(commentLine string) error {
 			return err
 		} else {
 			response.ResponseModel = model.Id
+			if parts[1] == "{array}" {
+				operation.SetItemsType(model.Id)
+				operation.Type = "array"
+			} else {
+				operation.Type = model.Id
+			}
 
 			operation.models = append(operation.models, model)
 			operation.models = append(operation.models, innerModels...)
