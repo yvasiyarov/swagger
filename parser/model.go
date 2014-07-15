@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"go/ast"
-	//	"log"
 	"reflect"
 	"strings"
 )
@@ -23,7 +22,6 @@ func NewModel(p *Parser) *Model {
 
 // modelName is something like package.subpackage.SomeModel or just "subpackage.SomeModel"
 func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*Model) {
-	//log.Printf("ParseModel: %s, CurrentPackage %s \n", modelName, currentPackage)
 
 	astTypeSpec, modelPackage := m.parser.FindModelDefinition(modelName, currentPackage)
 

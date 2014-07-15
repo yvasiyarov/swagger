@@ -198,12 +198,11 @@ func (operation *Operation) ParseSuccessComment(commentLine string) error {
 		}
 		model := NewModel(operation.parser)
 		response.ResponseModel = parts[2]
-		//		if !strings.HasPrefix(modelName, operation.packageName) {
-		//			modelName = operation.packageName + "." + modelName
-		//		}
 		if err, innerModels := model.ParseModel(response.ResponseModel, operation.parser.CurrentPackage); err != nil {
 			return err
 		} else {
+			response.ResponseModel = model.Id
+
 			operation.models = append(operation.models, model)
 			operation.models = append(operation.models, innerModels...)
 		}
