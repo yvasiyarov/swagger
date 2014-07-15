@@ -28,7 +28,8 @@ type Operation struct {
 	packageName      string
 }
 type OperationItems struct {
-	Ref string `json:"$ref,omitempty"`
+	Ref  string `json:"$ref,omitempty"`
+	Type string `json:"type,omitempty"`
 }
 
 func NewOperation(p *Parser, packageName string) *Operation {
@@ -40,7 +41,12 @@ func NewOperation(p *Parser, packageName string) *Operation {
 }
 
 func (operation *Operation) SetItemsType(itemsType string) {
-	operation.Items = OperationItems{Ref: itemsType}
+	operation.Items = OperationItems{}
+	if IsBasicType(itemsType) {
+		operation.Items.Type = itemsType
+	} else {
+		operation.Items.Ref = itemsType
+	}
 }
 
 func (operation *Operation) ParseComment(commentList *ast.CommentGroup) error {

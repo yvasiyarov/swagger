@@ -34,8 +34,15 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 		usedTypes := make(map[string]bool)
 
 		for _, property := range m.Properties {
-			typeName := strings.Trim(property.Type, "[]")
-			if property.IsBasicType(typeName) || m.parser.IsImplementMarshalInterface(typeName) {
+			typeName := property.Type
+			if typeName == "array" {
+				if property.Items.Type != "" {
+					typeName = property.Items.Type
+				} else {
+					typeName = property.Items.Ref
+				}
+			}
+			if IsBasicType(typeName) || m.parser.IsImplementMarshalInterface(typeName) {
 				continue
 			}
 
@@ -52,8 +59,14 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 				return err, nil
 			} else {
 				for _, property := range m.Properties {
-					if property.Type == typeName {
-						property.Type = typeModel.Id
+					if property.Type == "array" {
+						if property.Items.Ref == typeName {
+							property.Items.Ref = typeModel.Id
+						}
+					} else {
+						if property.Type == typeName {
+							property.Type = typeModel.Id
+						}
 					}
 				}
 				//log.Printf("Inner model %v parsed, parsing %s \n", typeName, modelName)
@@ -88,8 +101,14 @@ func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 	var innerModel *Model
 
 	property := NewModelProperty()
-	//log.Printf("field: %#v", field)
-	property.Type = property.GetTypeAsString(field.Type)
+
+	typeAsString := property.GetTypeAsString(field.Type)
+	if strings.HasPrefix(typeAsString, "[]") {
+		property.Type = "array"
+		property.SetItemType(typeAsString[2:])
+	} else {
+		property.Type = typeAsString
+	}
 
 	if len(field.Names) == 0 {
 		//name is not specified, so struct is "embeded" in our model
@@ -136,10 +155,14 @@ func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 }
 
 type ModelProperty struct {
-	Type        string            `json:"type"`
-	Description string            `json:"description"`
-	Items       map[string]string `json:"items,omitempty"`
-	Format      string            `json:"format"`
+	Type        string             `json:"type"`
+	Description string             `json:"description"`
+	Items       ModelPropertyItems `json:"items,omitempty"`
+	Format      string             `json:"format"`
+}
+type ModelPropertyItems struct {
+	Ref  string `json:"$ref,omitempty"`
+	Type string `json:"type,omitempty"`
 }
 
 func NewModelProperty() *ModelProperty {
@@ -169,11 +192,19 @@ var basicTypes = map[string]bool{
 	"uintptr":    true,
 }
 
-func (p *ModelProperty) IsBasicType(typeName string) bool {
+func IsBasicType(typeName string) bool {
 	_, ok := basicTypes[typeName]
 	return ok || strings.Contains(typeName, "interface")
 }
 
+func (p *ModelProperty) SetItemType(itemType string) {
+	p.Items = ModelPropertyItems{}
+	if IsBasicType(itemType) {
+		p.Items.Type = itemType
+	} else {
+		p.Items.Ref = itemType
+	}
+}
 func (p *ModelProperty) GetTypeAsString(fieldType interface{}) string {
 	var realType string
 	if astArrayType, ok := fieldType.(*ast.ArrayType); ok {
