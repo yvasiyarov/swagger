@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 type Operation struct {
@@ -64,7 +63,8 @@ func (operation *Operation) ParseComment(commentList *ast.CommentGroup) error {
 			} else if strings.HasPrefix(commentLine, "@Description") {
 				operation.Summary = strings.TrimSpace(commentLine[len("@Description"):])
 			} else if strings.HasPrefix(commentLine, "@Success") {
-				if err := operation.ParseSuccessComment(commentLine); err != nil {
+				sourceString := strings.TrimSpace(commentLine[len("@Success"):])
+				if err := operation.ParseResponseComment(sourceString); err != nil {
 					return err
 				}
 			} else if strings.HasPrefix(commentLine, "@Param") {
@@ -72,7 +72,8 @@ func (operation *Operation) ParseComment(commentList *ast.CommentGroup) error {
 					return err
 				}
 			} else if strings.HasPrefix(commentLine, "@Failure") {
-				if err := operation.ParseFailureComment(commentLine); err != nil {
+				sourceString := strings.TrimSpace(commentLine[len("@Failure"):])
+				if err := operation.ParseResponseComment(sourceString); err != nil {
 					return err
 				}
 			} else if strings.HasPrefix(commentLine, "@Accept") {
@@ -117,6 +118,7 @@ func (operation *Operation) ParseParamComment(commentLine string) error {
 	return nil
 }
 
+// @Accept  json
 func (operation *Operation) ParseAcceptComment(commentLine string) error {
 	accepts := strings.Split(strings.TrimSpace(strings.TrimSpace(commentLine[len("@Accept"):])), ",")
 	for _, a := range accepts {
@@ -137,81 +139,47 @@ func (operation *Operation) ParseAcceptComment(commentLine string) error {
 	}
 	return nil
 }
-func (operation *Operation) ParseFailureComment(commentLine string) error {
-	response := ResponseMessage{}
-	statement := strings.TrimSpace(commentLine[len("@Failure"):])
 
-	var httpCode []rune
-	var start bool
-	for i, s := range statement {
-		if unicode.IsSpace(s) {
-			if start {
-				response.Message = strings.TrimSpace(statement[i+1:])
-				break
-			} else {
-				continue
-			}
-		}
-		start = true
-		httpCode = append(httpCode, s)
-	}
-
-	if code, err := strconv.Atoi(string(httpCode)); err != nil {
-		return fmt.Errorf("Failure notation parse error: %v\n", err)
-	} else {
-		response.Code = code
-	}
-	operation.ResponseMessages = append(operation.ResponseMessages, response)
-	return nil
-}
-
+// @router /customer/get-wishlist/{wishlist_id} [get]
 func (operation *Operation) ParseRouterComment(commentLine string) error {
-	elements := strings.TrimSpace(commentLine[len("@router"):])
-	e1 := strings.SplitN(elements, " ", 2)
-	if len(e1) < 1 {
-		return errors.New("you should has router infomation")
+	sourceString := strings.TrimSpace(commentLine[len("@router"):])
+
+	re := regexp.MustCompile(`([\w\.\/\-{}]+)[^\[]+\[([^\]]+)`)
+	var matches []string
+
+	if matches = re.FindStringSubmatch(sourceString); len(matches) != 3 {
+		return fmt.Errorf("Can not parse router comment \"%s\", skipped.", commentLine)
 	}
-	operation.Path = e1[0]
-	if len(e1) == 2 && e1[1] != "" {
-		e1 = strings.SplitN(e1[1], " ", 2)
-		operation.HttpMethod = strings.ToUpper(strings.Trim(e1[0], "[]"))
-	} else {
-		operation.HttpMethod = "GET"
-	}
+
+	operation.Path = matches[1]
+	operation.HttpMethod = strings.ToUpper(matches[2])
 	return nil
 }
 
-// @Success 200 {object} model.OrderRow
-func (operation *Operation) ParseSuccessComment(commentLine string) error {
-	sourceString := strings.TrimSpace(commentLine[len("@Success"):])
+// @Success 200 {object} model.OrderRow "Error message, if code != 200"
+func (operation *Operation) ParseResponseComment(commentLine string) error {
+	re := regexp.MustCompile(`([\d]+)[\s]+([\w\{\}]+)[\s]+([\w\.\/]+)[^"]*(.*)?`)
+	var matches []string
 
-	parts := strings.Split(sourceString, " ")
-	notEmptyParts := make([]string, 0, len(parts))
-	for _, paramPart := range parts {
-		if paramPart != "" {
-			notEmptyParts = append(notEmptyParts, paramPart)
-		}
+	if matches = re.FindStringSubmatch(commentLine); len(matches) != 5 {
+		return fmt.Errorf("Can not parse response comment \"%s\", skipped.", commentLine)
 	}
-	parts = notEmptyParts
 
 	response := ResponseMessage{}
-	if code, err := strconv.Atoi(parts[0]); err != nil {
+	if code, err := strconv.Atoi(matches[1]); err != nil {
 		return errors.New("Success http code must be int")
 	} else {
 		response.Code = code
 	}
 
-	if parts[1] == "{object}" || parts[1] == "{array}" {
-		if len(parts) < 3 {
-			return errors.New("Success annotation error: object type must be specified")
-		}
+	if matches[2] == "{object}" || matches[2] == "{array}" {
 		model := NewModel(operation.parser)
-		response.ResponseModel = parts[2]
+		response.ResponseModel = matches[3]
 		if err, innerModels := model.ParseModel(response.ResponseModel, operation.parser.CurrentPackage); err != nil {
 			return err
 		} else {
 			response.ResponseModel = model.Id
-			if parts[1] == "{array}" {
+			if matches[1] == "{array}" {
 				operation.SetItemsType(model.Id)
 				operation.Type = "array"
 			} else {
@@ -221,9 +189,8 @@ func (operation *Operation) ParseSuccessComment(commentLine string) error {
 			operation.models = append(operation.models, model)
 			operation.models = append(operation.models, innerModels...)
 		}
-	} else {
-		response.Message = parts[2]
 	}
+	response.Message = strings.Trim(matches[4], "\"")
 
 	operation.ResponseMessages = append(operation.ResponseMessages, response)
 	return nil
