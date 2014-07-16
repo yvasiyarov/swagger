@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -97,26 +98,22 @@ func (operation *Operation) ParseParamComment(commentLine string) error {
 	swaggerParameter := Parameter{}
 	paramString := strings.TrimSpace(commentLine[len("@Param "):])
 
-	parts := strings.Split(paramString, " ")
-	notEmptyParts := make([]string, 0, len(parts))
-	for _, paramPart := range parts {
-		if paramPart != "" {
-			notEmptyParts = append(notEmptyParts, paramPart)
-		}
-	}
-	parts = notEmptyParts
+	re := regexp.MustCompile(`([\w]+)[\s]+([\w]+)[\s]+([\w]+)[\s]+([\w]+)[\s]+"([^"]+)"`)
 
-	if len(parts) < 4 {
-		return fmt.Errorf("Comments @Param at least should has 4 params")
-	}
-	swaggerParameter.Name = parts[0]
-	swaggerParameter.ParamType = parts[1]
-	swaggerParameter.Type = parts[2]
-	swaggerParameter.DataType = parts[2]
-	swaggerParameter.Required = strings.ToLower(parts[3]) == "true"
-	swaggerParameter.Description = strings.Trim(strings.Join(parts[4:], " "), "\"")
+	if matches := re.FindStringSubmatch(paramString); len(matches) != 6 {
+		return fmt.Errorf("Can not parse param comment \"%s\", skipped.", paramString)
+	} else {
+		//TODO: if type is not simple, then add to Models[]
+		swaggerParameter.Name = matches[1]
+		swaggerParameter.ParamType = matches[2]
+		swaggerParameter.Type = matches[3]
+		swaggerParameter.DataType = matches[3]
+		swaggerParameter.Required = strings.ToLower(matches[4]) == "true"
+		swaggerParameter.Description = matches[5]
 
-	operation.Parameters = append(operation.Parameters, swaggerParameter)
+		operation.Parameters = append(operation.Parameters, swaggerParameter)
+	}
+
 	return nil
 }
 
