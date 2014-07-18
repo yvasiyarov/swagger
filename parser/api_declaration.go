@@ -6,7 +6,7 @@ type ApiDeclaration struct {
 	SwaggerVersion string            `json:"swaggerVersion"`
 	BasePath       string            `json:"basePath"`
 	ResourcePath   string            `json:"resourcePath"` // must start with /
-	Consumes       []string          `json:"consumes,omitempty"`
+	Consumes       []string          `json:"-"`
 	Produces       []string          `json:"produces,omitempty"`
 	Apis           []*Api            `json:"apis,omitempty"`
 	Models         map[string]*Model `json:"models,omitempty"`

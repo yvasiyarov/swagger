@@ -18,11 +18,11 @@ type Operation struct {
 	Notes            string            `json:"notes,omitempty"`
 	Parameters       []Parameter       `json:"parameters,omitempty"`
 	ResponseMessages []ResponseMessage `json:"responseMessages,omitempty"`
-	Consumes         []string          `json:"consumes,omitempty"`
+	Consumes         []string          `json:"-"`
 	Produces         []string          `json:"produces,omitempty"`
 	Authorizations   []Authorization   `json:"authorizations,omitempty"`
 	Protocols        []Protocol        `json:"protocols,omitempty"`
-	Path             string            `json:`
+	Path             string            `json:"-"`
 	parser           *Parser
 	models           []*Model
 	packageName      string
@@ -179,11 +179,13 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 			return err
 		} else {
 			response.ResponseModel = model.Id
-			if matches[1] == "{array}" {
-				operation.SetItemsType(model.Id)
-				operation.Type = "array"
-			} else {
-				operation.Type = model.Id
+			if response.Code == 200 {
+				if matches[1] == "{array}" {
+					operation.SetItemsType(model.Id)
+					operation.Type = "array"
+				} else {
+					operation.Type = model.Id
+				}
 			}
 
 			operation.models = append(operation.models, model)
