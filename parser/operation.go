@@ -24,7 +24,7 @@ type Operation struct {
 	Protocols        []Protocol        `json:"protocols,omitempty"`
 	Path             string            `json:"-"`
 	parser           *Parser
-	models           []*Model
+	Models           []*Model `json:"-"`
 	packageName      string
 }
 type OperationItems struct {
@@ -35,7 +35,7 @@ type OperationItems struct {
 func NewOperation(p *Parser, packageName string) *Operation {
 	return &Operation{
 		parser:      p,
-		models:      make([]*Model, 0),
+		Models:      make([]*Model, 0),
 		packageName: packageName,
 	}
 }
@@ -188,8 +188,8 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 				}
 			}
 
-			operation.models = append(operation.models, model)
-			operation.models = append(operation.models, innerModels...)
+			operation.Models = append(operation.Models, model)
+			operation.Models = append(operation.Models, innerModels...)
 		}
 	}
 	response.Message = strings.Trim(matches[4], "\"")

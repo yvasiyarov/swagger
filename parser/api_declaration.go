@@ -51,8 +51,7 @@ func (api *ApiDeclaration) AddProducesTypes(op *Operation) {
 	}
 }
 func (api *ApiDeclaration) AddModels(op *Operation) {
-	//	log.Fatalf("OP models: %#v\n API: %#v\n", op.models, api.Models)
-	for _, m := range op.models {
+	for _, m := range op.Models {
 		if m != nil {
 			if _, ok := api.Models[m.Id]; !ok {
 				api.Models[m.Id] = m
