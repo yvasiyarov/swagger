@@ -13,6 +13,12 @@ import (
 	"strings"
 )
 
+/*
+type Parser struct {
+
+}
+*/
+
 type Parser struct {
 	Listing                           *ResourceListing
 	TopLevelApis                      map[string]*ApiDeclaration

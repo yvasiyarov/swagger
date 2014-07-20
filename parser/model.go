@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"go/ast"
+	"log"
 	"reflect"
 	"strings"
 )
@@ -51,7 +52,7 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 		}
 
 		//log.Printf("Before parse inner model list: %#v\n (%s)", usedTypes, modelName)
-		innerModelList = make([]*Model, len(usedTypes))
+		innerModelList = make([]*Model, 0, len(usedTypes))
 
 		for typeName, _ := range usedTypes {
 			typeModel := NewModel(m.parser)
@@ -71,9 +72,13 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 					}
 				}
 				//log.Printf("Inner model %v parsed, parsing %s \n", typeName, modelName)
-
-				innerModelList = append(innerModelList, typeModel)
-				innerModelList = append(innerModelList, typeInnerModels...)
+				if typeModel != nil {
+					innerModelList = append(innerModelList, typeModel)
+				}
+				if typeInnerModels != nil && len(typeInnerModels) > 0 {
+					innerModelList = append(innerModelList, typeInnerModels...)
+				}
+				log.Printf("innerModelList: %#v\n, typeInnerModels: %#v, usedTypes: %#v \n", innerModelList, typeInnerModels, usedTypes)
 			}
 		}
 		//log.Printf("After parse inner model list: %#v\n (%s)", usedTypes, modelName)
@@ -114,22 +119,34 @@ func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 	}
 
 	if len(field.Names) == 0 {
-		//name is not specified, so struct is "embeded" in our model
+
 		if astSelectorExpr, ok := field.Type.(*ast.SelectorExpr); ok {
-			astTypeIdent, _ := astSelectorExpr.X.(*ast.Ident)
-
-			name = astTypeIdent.Name + "." + strings.TrimPrefix(astSelectorExpr.Sel.Name, "*")
-
-			innerModel = NewModel(m.parser)
-			//log.Printf("Try to parse embeded type %s \n", name)
-			//log.Fatalf("DEBUG: field: %#v\n, selector.X: %#v\n selector.Sel: %#v\n", field, astSelectorExpr.X, astSelectorExpr.Sel)
-			innerModel.ParseModel(name, modelPackage)
-
-			for innerFieldName, innerField := range innerModel.Properties {
-				m.Properties[innerFieldName] = innerField
+			packageName := modelPackage
+			if astTypeIdent, ok := astSelectorExpr.X.(*ast.Ident); ok {
+				packageName = astTypeIdent.Name
 			}
-			return
+
+			name = packageName + "." + strings.TrimPrefix(astSelectorExpr.Sel.Name, "*")
+		} else if astTypeIdent, ok := field.Type.(*ast.Ident); ok {
+			name = astTypeIdent.Name
+		} else if astStarExpr, ok := field.Type.(*ast.StarExpr); ok {
+			if astIdent, ok := astStarExpr.X.(*ast.Ident); ok {
+				name = astIdent.Name
+			}
+		} else {
+			log.Fatalf("Something goes wrong: %#v", field.Type)
 		}
+		innerModel = NewModel(m.parser)
+		//log.Printf("Try to parse embeded type %s \n", name)
+		//log.Fatalf("DEBUG: field: %#v\n, selector.X: %#v\n selector.Sel: %#v\n", field, astSelectorExpr.X, astSelectorExpr.Sel)
+		innerModel.ParseModel(name, modelPackage)
+
+		for innerFieldName, innerField := range innerModel.Properties {
+			m.Properties[innerFieldName] = innerField
+		}
+
+		//log.Fatalf("Here %#v\n", field.Type)
+		return
 	} else {
 		name = field.Names[0].Name
 	}
@@ -138,16 +155,26 @@ func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 	//Analyse struct fields annotations
 	if field.Tag != nil {
 		structTag := reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
-		if tag := structTag.Get("json"); tag != "" {
-			name = tag
-		}
+		var tagText string
 		if thriftTag := structTag.Get("thrift"); thriftTag != "" {
-			tags := strings.Split(thriftTag, ",")
-			if tags[0] != "" {
-				name = tags[0]
+			tagText = thriftTag
+		}
+		if tag := structTag.Get("json"); tag != "" {
+			tagText = tag
+		}
+
+		tagValues := strings.Split(tagText, ",")
+		var isRequired = false
+
+		for _, v := range tagValues {
+			if v != "" && v != "required" && v != "omitempty" {
+				name = v
+			}
+			if v == "required" {
+				isRequired = true
 			}
 		}
-		if required := structTag.Get("required"); required != "" {
+		if required := structTag.Get("required"); required != "" || isRequired {
 			m.Required = append(m.Required, name)
 		}
 		if desc := structTag.Get("description"); desc != "" {
