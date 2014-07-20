@@ -315,12 +315,14 @@ func (parser *Parser) ParseApiDescription(packageName string) {
 				case *ast.FuncDecl:
 					if parser.IsController(astDeclaration) {
 						operation := NewOperation(parser, packageName)
-						if err := operation.ParseComment(astDeclaration.Doc); err != nil {
-							if err != CommentIsEmptyError {
-								log.Printf("Can not parse comment for function: %v, package: %v, got error: %v\n", astDeclaration.Name.String(), packageName, err)
+						if astDeclaration.Doc != nil && astDeclaration.Doc.List != nil {
+							for _, comment := range astDeclaration.Doc.List {
+								if err := operation.ParseComment(comment.Text); err != nil {
+									log.Printf("Can not parse comment for function: %v, package: %v, got error: %v\n", astDeclaration.Name.String(), packageName, err)
+								}
 							}
-						} else {
-							//log.Printf("Parsed comment: %#v\n", astDeclaration.Doc)
+						}
+						if operation.Path != "" {
 							parser.AddOperation(operation)
 						}
 					}

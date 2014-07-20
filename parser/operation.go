@@ -3,7 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"go/ast"
+	//"go/ast"
 	"regexp"
 	"strconv"
 	"strings"
@@ -49,46 +49,40 @@ func (operation *Operation) SetItemsType(itemsType string) {
 	}
 }
 
-func (operation *Operation) ParseComment(commentList *ast.CommentGroup) error {
-	if commentList != nil && commentList.List != nil {
-		for _, comment := range commentList.List {
-			//log.Printf("Parse comemnt: %#v\n", c)
-			commentLine := strings.TrimSpace(strings.TrimLeft(comment.Text, "//"))
-			if strings.HasPrefix(commentLine, "@router") {
-				if err := operation.ParseRouterComment(commentLine); err != nil {
-					return err
-				}
-			} else if strings.HasPrefix(commentLine, "@Title") {
-				operation.Nickname = strings.TrimSpace(commentLine[len("@Title"):])
-			} else if strings.HasPrefix(commentLine, "@Description") {
-				operation.Summary = strings.TrimSpace(commentLine[len("@Description"):])
-			} else if strings.HasPrefix(commentLine, "@Success") {
-				sourceString := strings.TrimSpace(commentLine[len("@Success"):])
-				if err := operation.ParseResponseComment(sourceString); err != nil {
-					return err
-				}
-			} else if strings.HasPrefix(commentLine, "@Param") {
-				if err := operation.ParseParamComment(commentLine); err != nil {
-					return err
-				}
-			} else if strings.HasPrefix(commentLine, "@Failure") {
-				sourceString := strings.TrimSpace(commentLine[len("@Failure"):])
-				if err := operation.ParseResponseComment(sourceString); err != nil {
-					return err
-				}
-			} else if strings.HasPrefix(commentLine, "@Accept") {
-				if err := operation.ParseAcceptComment(commentLine); err != nil {
-					return err
-				}
-			}
+func (operation *Operation) ParseComment(comment string) error {
+	commentLine := strings.TrimSpace(strings.TrimLeft(comment, "//"))
+	if strings.HasPrefix(commentLine, "@router") {
+		if err := operation.ParseRouterComment(commentLine); err != nil {
+			return err
 		}
-	} else {
-		return CommentIsEmptyError
+	} else if strings.HasPrefix(commentLine, "@Title") {
+		operation.Nickname = strings.TrimSpace(commentLine[len("@Title"):])
+	} else if strings.HasPrefix(commentLine, "@Description") {
+		operation.Summary = strings.TrimSpace(commentLine[len("@Description"):])
+	} else if strings.HasPrefix(commentLine, "@Success") {
+		sourceString := strings.TrimSpace(commentLine[len("@Success"):])
+		if err := operation.ParseResponseComment(sourceString); err != nil {
+			return err
+		}
+	} else if strings.HasPrefix(commentLine, "@Param") {
+		if err := operation.ParseParamComment(commentLine); err != nil {
+			return err
+		}
+	} else if strings.HasPrefix(commentLine, "@Failure") {
+		sourceString := strings.TrimSpace(commentLine[len("@Failure"):])
+		if err := operation.ParseResponseComment(sourceString); err != nil {
+			return err
+		}
+	} else if strings.HasPrefix(commentLine, "@Accept") {
+		if err := operation.ParseAcceptComment(commentLine); err != nil {
+			return err
+		}
 	}
-
-	if operation.Path == "" {
-		return CommentIsEmptyError
-	}
+	/*
+		if operation.Path == "" {
+			return CommentIsEmptyError
+		}
+	*/
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/yvasiyarov/swagger/parser"
+	"strings"
 	"testing"
 )
 
@@ -102,6 +103,46 @@ func (suite *OperationSuite) TestParseResponseComment() {
 	assert.Equal(suite.T(), op3.ResponseMessages[0].Message, "", "Can not parse response comment")
 	assert.Equal(suite.T(), op3.Type, "array", "Can not parse response comment")
 	assert.Equal(suite.T(), op3.Items.Type, "string", "Can not parse response comment")
+}
+
+func (suite *OperationSuite) TestParseComment() {
+	operationComment := `
+// @Title getOrderByNumber
+// @Description Return order by order number
+// @Accept  json
+// @Param   order_nr     path    string  true	"Order number"
+// @Success 200 {array}  int
+// @Failure 400 {simple} string     "Order ID must be specified"
+// @router order/by-number/{order_nr} [get]
+`
+	op := parser.NewOperation(suite.parser, "test")
+	for _, line := range strings.Split(operationComment, "\n") {
+		err := op.ParseComment(line)
+		assert.Nil(suite.T(), err, "Can not parse operation comment")
+	}
+
+	assert.Equal(suite.T(), op.Consumes, []string{parser.ContentTypeJson}, "Can no parse operation comment")
+	assert.Equal(suite.T(), op.Produces, []string{parser.ContentTypeJson}, "Can no parse operation comment")
+
+	assert.Equal(suite.T(), op.Path, "order/by-number/{order_nr}", "Can not parse operation comment")
+	assert.Equal(suite.T(), op.HttpMethod, "GET", "Can not parse operation comment")
+
+	assert.Len(suite.T(), op.Parameters, 1, "Can not parse operation comment")
+	assert.Equal(suite.T(), op.Parameters[0].Name, "order_nr", "Can not parse operation comment")
+	assert.Equal(suite.T(), op.Parameters[0].ParamType, "path", "Can not parse operation comment")
+	assert.Equal(suite.T(), op.Parameters[0].Type, "string", "Can not parse operation comment")
+	assert.Equal(suite.T(), op.Parameters[0].DataType, "string", "Can not parse operation comment")
+	assert.Equal(suite.T(), op.Parameters[0].Required, true, "Can not parse operation comment")
+	assert.Equal(suite.T(), op.Parameters[0].Description, "Order number", "Can not parse operation comment")
+
+	assert.Len(suite.T(), op.ResponseMessages, 2, "Can not parse operation comment")
+	assert.Equal(suite.T(), op.ResponseMessages[0].Code, 200, "Can not parse operation comment")
+	assert.Equal(suite.T(), op.ResponseMessages[0].Message, "", "Can not parse operation comment")
+	assert.Equal(suite.T(), op.Type, "array", "Can not parse operation comment")
+	assert.Equal(suite.T(), op.Items.Type, "int", "Can not parse operation comment")
+
+	assert.Equal(suite.T(), op.ResponseMessages[1].Code, 400, "Can not parse operation comment")
+	assert.Equal(suite.T(), op.ResponseMessages[1].Message, "Order ID must be specified", "Can not parse operation comment")
 }
 
 func TestOperationSuite(t *testing.T) {
