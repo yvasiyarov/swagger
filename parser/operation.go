@@ -171,28 +171,33 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 	} else {
 		response.Code = code
 	}
+	response.Message = strings.Trim(matches[4], "\"")
 
-	if matches[2] == "{object}" || matches[2] == "{array}" {
+	typeName := ""
+	if IsBasicType(matches[3]) {
+		typeName = matches[3]
+	} else {
 		model := NewModel(operation.parser)
 		response.ResponseModel = matches[3]
 		if err, innerModels := model.ParseModel(response.ResponseModel, operation.parser.CurrentPackage); err != nil {
 			return err
 		} else {
-			response.ResponseModel = model.Id
-			if response.Code == 200 {
-				if matches[1] == "{array}" {
-					operation.SetItemsType(model.Id)
-					operation.Type = "array"
-				} else {
-					operation.Type = model.Id
-				}
-			}
+			typeName = model.Id
 
 			operation.Models = append(operation.Models, model)
 			operation.Models = append(operation.Models, innerModels...)
 		}
 	}
-	response.Message = strings.Trim(matches[4], "\"")
+
+	response.ResponseModel = typeName
+	if response.Code == 200 {
+		if matches[2] == "{array}" {
+			operation.SetItemsType(typeName)
+			operation.Type = "array"
+		} else {
+			operation.Type = typeName
+		}
+	}
 
 	operation.ResponseMessages = append(operation.ResponseMessages, response)
 	return nil

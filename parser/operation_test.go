@@ -72,9 +72,36 @@ func (suite *OperationSuite) TestParseParamComment() {
 	assert.Equal(suite.T(), op.Parameters[0].DataType, "string", "Can not parse param comment")
 	assert.Equal(suite.T(), op.Parameters[0].Required, true, "Can not parse param comment")
 	assert.Equal(suite.T(), op.Parameters[0].Description, "Order number", "Can not parse param comment")
+}
 
-	//assert.Equal(suite.T(), op.Path, "/customer/get-wishlist/", "Can not parse router comment")
-	//assert.Equal(suite.T(), op.HttpMethod, "GET", "Can not parse router comment")
+func (suite *OperationSuite) TestParseResponseComment() {
+	op := parser.NewOperation(suite.parser, "test")
+	err := op.ParseResponseComment("200 {simple} string")
+	assert.Nil(suite.T(), err, "Can not parse response comment")
+	assert.Len(suite.T(), op.ResponseMessages, 1, "Can not parse response comment")
+
+	assert.Equal(suite.T(), op.ResponseMessages[0].Code, 200, "Can not parse response comment")
+	assert.Equal(suite.T(), op.ResponseMessages[0].Message, "", "Can not parse response comment")
+	assert.Equal(suite.T(), op.Type, "string", "Can not parse response comment")
+
+	op2 := parser.NewOperation(suite.parser, "test")
+	err2 := op2.ParseResponseComment("400 {simple} string     \"Order ID must be specified\"")
+	assert.Nil(suite.T(), err2, "Can not parse response comment")
+	assert.Len(suite.T(), op2.ResponseMessages, 1, "Can not parse response comment")
+
+	assert.Equal(suite.T(), op2.ResponseMessages[0].Code, 400, "Can not parse response comment")
+	assert.Equal(suite.T(), op2.ResponseMessages[0].Message, "Order ID must be specified", "Can not parse response comment")
+	assert.Equal(suite.T(), op2.Type, "", "Can not parse response comment")
+
+	op3 := parser.NewOperation(suite.parser, "test")
+	err3 := op3.ParseResponseComment("200 {array} string ")
+	assert.Nil(suite.T(), err3, "Can not parse response comment")
+	assert.Len(suite.T(), op3.ResponseMessages, 1, "Can not parse response comment")
+
+	assert.Equal(suite.T(), op3.ResponseMessages[0].Code, 200, "Can not parse response comment")
+	assert.Equal(suite.T(), op3.ResponseMessages[0].Message, "", "Can not parse response comment")
+	assert.Equal(suite.T(), op3.Type, "array", "Can not parse response comment")
+	assert.Equal(suite.T(), op3.Items.Type, "string", "Can not parse response comment")
 }
 
 func TestOperationSuite(t *testing.T) {
