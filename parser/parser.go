@@ -13,12 +13,6 @@ import (
 	"strings"
 )
 
-/*
-type Parser struct {
-
-}
-*/
-
 type Parser struct {
 	Listing                           *ResourceListing
 	TopLevelApis                      map[string]*ApiDeclaration
@@ -191,7 +185,16 @@ func (parser *Parser) AddOperation(op *Operation) {
 	api.AddOperation(op)
 }
 
-//TypeDefinitions
+func (parser *Parser) ParseApi(packageNames string) {
+	packages := strings.Split(packageNames, ",")
+	for _, packageName := range packages {
+		parser.ParseTypeDefinitions(packageName)
+	}
+	for _, packageName := range packages {
+		parser.ParseApiDescription(packageName)
+	}
+}
+
 func (parser *Parser) ParseTypeDefinitions(packageName string) {
 	parser.CurrentPackage = packageName
 	pkgRealPath := parser.GetRealPackagePath(packageName)

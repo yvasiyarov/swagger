@@ -78,7 +78,7 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 				if typeInnerModels != nil && len(typeInnerModels) > 0 {
 					innerModelList = append(innerModelList, typeInnerModels...)
 				}
-				log.Printf("innerModelList: %#v\n, typeInnerModels: %#v, usedTypes: %#v \n", innerModelList, typeInnerModels, usedTypes)
+				//log.Printf("innerModelList: %#v\n, typeInnerModels: %#v, usedTypes: %#v \n", innerModelList, typeInnerModels, usedTypes)
 			}
 		}
 		//log.Printf("After parse inner model list: %#v\n (%s)", usedTypes, modelName)

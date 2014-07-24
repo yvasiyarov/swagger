@@ -91,8 +91,7 @@ func main() {
 
 	log.Println("Start parsing")
 	parser.ParseGeneralApiInfo(path.Join(gopath, "src", *mainApiFile))
-	parser.ParseTypeDefinitions(*apiPackage)
-	parser.ParseApiDescription(*apiPackage)
+	parser.ParseApi(*apiPackage)
 
 	log.Println("Finish parsing")
 	generateSwaggerDocs(parser)
