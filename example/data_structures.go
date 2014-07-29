@@ -29,3 +29,8 @@ type StructureWithEmbededStructure struct {
 type StructureWithEmbededPointer struct {
 	*StructureWithSlice
 }
+
+type APIError struct {
+	ErrorCode    int
+	ErrorMessage string
+}
