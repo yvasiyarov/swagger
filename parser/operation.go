@@ -78,12 +78,26 @@ func (operation *Operation) ParseComment(comment string) error {
 			return err
 		}
 	}
-	/*
-		if operation.Path == "" {
-			return CommentIsEmptyError
-		}
-	*/
+
+	operation.Models = operation.getUniqueModels()
+
 	return nil
+}
+
+func (operation *Operation) getUniqueModels() []*Model {
+
+	uniqueModels := make([]*Model, 0, len(operation.Models))
+	modelIds := map[string]bool{}
+
+	for _, model := range operation.Models {
+		if _, exists := modelIds[model.Id]; exists {
+			continue
+		}
+		uniqueModels = append(uniqueModels, model)
+		modelIds[model.Id] = true
+	}
+
+	return uniqueModels
 }
 
 // Parse params return []string of param properties

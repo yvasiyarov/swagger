@@ -16,7 +16,7 @@ type Context struct {
 // @Success 200 {object} string
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /get-string-by-int/{some_id} [get]
+// @router /testapi/get-string-by-int/{some_id} [get]
 func (c *Context) GetStringByInt(rw web.ResponseWriter, req *web.Request) {
 	fmt.Fprint(rw, "Some data")
 }
