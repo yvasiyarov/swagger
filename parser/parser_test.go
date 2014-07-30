@@ -229,12 +229,6 @@ func (suite *ParserSuite) CheckGetInterface(op *parser.Operation) {
 
 	assert.Len(suite.T(), op.Parameters, 0, "Params not parsed")
 	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
-
-	suite.T().Log("Models list:")
-	for _, m := range op.Models {
-		suite.T().Log(m)
-	}
-
 	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
 }
 
@@ -251,12 +245,6 @@ func (suite *ParserSuite) CheckGetSimpleAliased(op *parser.Operation) {
 
 	assert.Len(suite.T(), op.Parameters, 0, "Params not parsed")
 	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
-
-	suite.T().Log("Models list:")
-	for _, m := range op.Models {
-		suite.T().Log(m)
-	}
-
 	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
 }
 
@@ -274,12 +262,6 @@ func (suite *ParserSuite) CheckGetArrayOfInterfaces(op *parser.Operation) {
 
 	assert.Len(suite.T(), op.Parameters, 0, "Params not parsed")
 	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
-
-	suite.T().Log("Models list:")
-	for _, m := range op.Models {
-		suite.T().Log(m)
-	}
-
 	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
 }
 
@@ -307,8 +289,48 @@ func (suite *ParserSuite) CheckModelList(topApi *parser.ApiDeclaration) {
 		switch model.Id {
 		case "github.com.yvasiyarov.swagger.example.APIError":
 			assert.Len(suite.T(), model.Properties, 2, "Model not parsed correctly")
+
+		case "github.com.yvasiyarov.swagger.example.SimpleAlias":
+			assert.Len(suite.T(), model.Properties, 0, "Model not parsed correctly")
+
+		case "github.com.yvasiyarov.swagger.example.InterfaceType":
+			assert.Len(suite.T(), model.Properties, 0, "Model not parsed correctly")
+
+		case "github.com.yvasiyarov.swagger.example.StructureWithEmbededPointer":
+			assert.Len(suite.T(), model.Properties, 2, "Model not parsed correctly")
+
+		case "github.com.yvasiyarov.swagger.example.StructureWithEmbededStructure":
+			assert.Len(suite.T(), model.Properties, 2, "Model not parsed correctly")
+
+		case "github.com.yvasiyarov.swagger.example.StructureWithSlice":
+			assert.Len(suite.T(), model.Properties, 2, "Model not parsed correctly")
+
+		case "github.com.yvasiyarov.swagger.example.SimpleStructureWithAnnotations":
+			assert.Len(suite.T(), model.Properties, 2, "Model not parsed correctly")
+
+		default:
+			suite.T().Errorf("Model %#v", model)
 		}
 	}
+}
+
+func (suite *ParserSuite) TestAPIListing() {
+	assert.Len(suite.T(), suite.parser.Listing.Apis, 1, "Top level API not parsed")
+	assert.NotNil(suite.T(), suite.parser.Listing.Apis[0], "Api ref is null")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Apis[0].Path, "Path is empty")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Apis[0].Description, "Description is empty")
+
+	assert.NotEmpty(suite.T(), suite.parser.Listing.ApiVersion, "Api version not parsed")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.SwaggerVersion, "Swagger version not parsed")
+
+	assert.NotNil(suite.T(), suite.parser.Listing.Infos, "Info is null")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Infos.Contact, "Contact is not parsed")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Infos.Description, "Description is not parsed")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Infos.License, "License is not parsed")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Infos.LicenseUrl, "License URL is not parsed")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Infos.TermsOfServiceUrl, "Terms of service is not parsed")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Infos.Title, "Title is not parsed")
+
 }
 
 func TestParserSuite(t *testing.T) {

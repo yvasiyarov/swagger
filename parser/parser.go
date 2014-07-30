@@ -69,10 +69,10 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 					parser.Listing.Infos.TermsOfServiceUrl = strings.TrimSpace(commentLine[len("@TermsOfServiceUrl"):])
 				} else if strings.HasPrefix(commentLine, "@Contact") {
 					parser.Listing.Infos.Contact = strings.TrimSpace(commentLine[len("@Contact"):])
-				} else if strings.HasPrefix(commentLine, "@License") {
-					parser.Listing.Infos.License = strings.TrimSpace(commentLine[len("@License"):])
 				} else if strings.HasPrefix(commentLine, "@LicenseUrl") {
 					parser.Listing.Infos.LicenseUrl = strings.TrimSpace(commentLine[len("@LicenseUrl"):])
+				} else if strings.HasPrefix(commentLine, "@License") {
+					parser.Listing.Infos.License = strings.TrimSpace(commentLine[len("@License"):])
 				}
 			}
 		}
@@ -177,7 +177,8 @@ func (parser *Parser) AddOperation(op *Operation) {
 		parser.TopLevelApis[path[0]] = api
 
 		apiRef := &ApiRef{
-			Path: api.ResourcePath,
+			Path:        api.ResourcePath,
+			Description: op.Summary,
 		}
 		parser.Listing.Apis = append(parser.Listing.Apis, apiRef)
 	}

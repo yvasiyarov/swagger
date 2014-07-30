@@ -4,7 +4,7 @@ Swagger UI generator for Go
 Swagger UI generator was inspired by http://beego.me/docs/advantage/docs.md. Main difference from Beego's implementation - this generator doesn't depend on Beego framework. You can use any framework for your API (or don't use frameworks at all). You just add declarative comments to API controlers, which you wanna export, run generator and [your documentation is ready!](http://petstore.swagger.wordnik.com/)        
 
 PS   
-You should consider quality of this package as "pre-alpha". If you find bug - just send pull request. If you want to help - please, see list of TODO's at the end of documentation.   
+You should consider quality of this package as "alpha". If you find bug - just send pull request. If you want to help - please, see list of TODO's at the end of documentation.   
 
 
 Declarative comments format  
@@ -92,11 +92,8 @@ TODO: implement example API :-)
 
 TODO
 ----
-1. Add unit tests.
-2. Write better documentation
-3. Write examples of API
-4. Document used data structures and methods
-5. Add possibility to parse API, which consists of one and more package
+1. Write better documentation
+2. Document used data structures and methods
 
 Known limitations
 -------
