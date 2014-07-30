@@ -74,7 +74,7 @@ func (suite *ParserSuite) TestTopLevelAPI() {
 }
 
 func (suite *ParserSuite) CheckSubApiList(topApi *parser.ApiDeclaration) {
-	assert.Len(suite.T(), topApi.Apis, 1, "Sub API was not parsed corectly")
+	assert.Len(suite.T(), topApi.Apis, 9, "Sub API was not parsed corectly")
 
 	for _, subApi := range topApi.Apis {
 		switch subApi.Path {
@@ -83,6 +83,32 @@ func (suite *ParserSuite) CheckSubApiList(topApi *parser.ApiDeclaration) {
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
 
 			suite.CheckGetStringByInt(subApi.Operations[0])
+		case "/testapi/get-struct-by-int/{some_id}":
+			assert.Equal(suite.T(), subApi.Description, "get struct by ID", "Description was not parsed properly")
+			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+
+			//suite.CheckGetStringByInt(subApi.Operations[0])
+		case "/testapi/get-struct2-by-int/{some_id}":
+			assert.Equal(suite.T(), subApi.Description, "get struct2 by ID", "Description was not parsed properly")
+			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+		case "/testapi/get-simple-array-by-string/{some_id}":
+			assert.Equal(suite.T(), subApi.Description, "get simple array by ID", "Description was not parsed properly")
+			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+		case "/testapi/get-struct-array-by-string/{some_id}":
+			assert.Equal(suite.T(), subApi.Description, "get struct array by ID", "Description was not parsed properly")
+			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+		case "/testapi/get-interface":
+			assert.Equal(suite.T(), subApi.Description, "get interface", "Description was not parsed properly")
+			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+		case "/testapi/get-simple-aliased":
+			assert.Equal(suite.T(), subApi.Description, "get simple aliases", "Description was not parsed properly")
+			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+		case "/testapi/get-array-of-interfaces":
+			assert.Equal(suite.T(), subApi.Description, "get array of interfaces", "Description was not parsed properly")
+			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+		case "/testapi/get-struct3":
+			assert.Equal(suite.T(), subApi.Description, "get struct3", "Description was not parsed properly")
+			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
 		default:
 			suite.T().Fatalf("Undefined sub API: %#v", subApi)
 		}
@@ -113,7 +139,7 @@ func (suite *ParserSuite) CheckGetStringByInt(op *parser.Operation) {
 }
 
 func (suite *ParserSuite) CheckModelList(topApi *parser.ApiDeclaration) {
-	assert.Len(suite.T(), topApi.Models, 1, "Models was not parsed corectly")
+	assert.Len(suite.T(), topApi.Models, 6, "Models was not parsed corectly")
 
 	for _, model := range topApi.Models {
 		switch model.Id {
