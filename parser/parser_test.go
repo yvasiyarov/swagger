@@ -81,34 +81,48 @@ func (suite *ParserSuite) CheckSubApiList(topApi *parser.ApiDeclaration) {
 		case "/testapi/get-string-by-int/{some_id}":
 			assert.Equal(suite.T(), subApi.Description, "get string by ID", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
-
 			suite.CheckGetStringByInt(subApi.Operations[0])
+
 		case "/testapi/get-struct-by-int/{some_id}":
 			assert.Equal(suite.T(), subApi.Description, "get struct by ID", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+			suite.CheckGetStructByInt(subApi.Operations[0])
 
-			//suite.CheckGetStringByInt(subApi.Operations[0])
 		case "/testapi/get-struct2-by-int/{some_id}":
 			assert.Equal(suite.T(), subApi.Description, "get struct2 by ID", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+			suite.CheckGetStruct2ByInt(subApi.Operations[0])
+
 		case "/testapi/get-simple-array-by-string/{some_id}":
 			assert.Equal(suite.T(), subApi.Description, "get simple array by ID", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+			suite.CheckGetSimpleArrayByString(subApi.Operations[0])
+
 		case "/testapi/get-struct-array-by-string/{some_id}":
 			assert.Equal(suite.T(), subApi.Description, "get struct array by ID", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+			suite.CheckGetStructArrayByString(subApi.Operations[0])
+
 		case "/testapi/get-interface":
 			assert.Equal(suite.T(), subApi.Description, "get interface", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+			suite.CheckGetInterface(subApi.Operations[0])
+
 		case "/testapi/get-simple-aliased":
 			assert.Equal(suite.T(), subApi.Description, "get simple aliases", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+			suite.CheckGetSimpleAliased(subApi.Operations[0])
+
 		case "/testapi/get-array-of-interfaces":
 			assert.Equal(suite.T(), subApi.Description, "get array of interfaces", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+			suite.CheckGetArrayOfInterfaces(subApi.Operations[0])
+
 		case "/testapi/get-struct3":
 			assert.Equal(suite.T(), subApi.Description, "get struct3", "Description was not parsed properly")
 			assert.Len(suite.T(), subApi.Operations, 1, "Operations not parsed correctly")
+			suite.CheckGetStruct3(subApi.Operations[0])
+
 		default:
 			suite.T().Fatalf("Undefined sub API: %#v", subApi)
 		}
@@ -118,7 +132,6 @@ func (suite *ParserSuite) CheckSubApiList(topApi *parser.ApiDeclaration) {
 func (suite *ParserSuite) CheckGetStringByInt(op *parser.Operation) {
 	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
 	assert.Equal(suite.T(), "GetStringByInt", op.Nickname, "Nickname not parsed")
-	assert.Equal(suite.T(), "string", op.Type, "Type not parsed")
 	assert.Equal(suite.T(), "string", op.Type, "Type not parsed")
 
 	assert.Equal(suite.T(), op.Path, "/testapi/get-string-by-int/{some_id}", "Resource path invalid")
@@ -130,16 +143,165 @@ func (suite *ParserSuite) CheckGetStringByInt(op *parser.Operation) {
 	assert.Len(suite.T(), op.Parameters, 1, "Params not parsed")
 	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
 
+	assert.Len(suite.T(), op.Models, 1, "Models not parsed %#v", op.Models)
+}
+
+func (suite *ParserSuite) CheckGetStructByInt(op *parser.Operation) {
+	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
+	assert.Equal(suite.T(), "GetStructByInt", op.Nickname, "Nickname not parsed")
+	assert.Equal(suite.T(), "github.com.yvasiyarov.swagger.example.StructureWithEmbededStructure", op.Type, "Type not parsed")
+
+	assert.Equal(suite.T(), op.Path, "/testapi/get-struct-by-int/{some_id}", "Resource path invalid")
+
+	expectedTypes := []string{parser.ContentTypeJson}
+	assert.Equal(suite.T(), op.Produces, expectedTypes, "Produced types not added correctly")
+	assert.Equal(suite.T(), op.Consumes, expectedTypes, "Consumed types not added correctly")
+
+	assert.Len(suite.T(), op.Parameters, 3, "Params not parsed")
+	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
+
+	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
+}
+
+func (suite *ParserSuite) CheckGetStruct2ByInt(op *parser.Operation) {
+	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
+	assert.Equal(suite.T(), "GetStruct2ByInt", op.Nickname, "Nickname not parsed")
+	assert.Equal(suite.T(), "github.com.yvasiyarov.swagger.example.StructureWithEmbededPointer", op.Type, "Type not parsed")
+
+	assert.Equal(suite.T(), op.Path, "/testapi/get-struct2-by-int/{some_id}", "Resource path invalid")
+
+	expectedTypes := []string{parser.ContentTypeJson}
+	assert.Equal(suite.T(), op.Produces, expectedTypes, "Produced types not added correctly")
+	assert.Equal(suite.T(), op.Consumes, expectedTypes, "Consumed types not added correctly")
+
+	assert.Len(suite.T(), op.Parameters, 3, "Params not parsed")
+	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
+
+	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
+}
+
+func (suite *ParserSuite) CheckGetSimpleArrayByString(op *parser.Operation) {
+	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
+	assert.Equal(suite.T(), "GetSimpleArrayByString", op.Nickname, "Nickname not parsed")
+	assert.Equal(suite.T(), "array", op.Type, "Type not parsed")
+	assert.Equal(suite.T(), "string", op.Items.Type, "Type not parsed")
+
+	assert.Equal(suite.T(), op.Path, "/testapi/get-simple-array-by-string/{some_id}", "Resource path invalid")
+
+	expectedTypes := []string{parser.ContentTypeJson}
+	assert.Equal(suite.T(), op.Produces, expectedTypes, "Produced types not added correctly")
+	assert.Equal(suite.T(), op.Consumes, expectedTypes, "Consumed types not added correctly")
+
+	assert.Len(suite.T(), op.Parameters, 3, "Params not parsed")
+	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
+
+	assert.Len(suite.T(), op.Models, 1, "Models not parsed %#v", op.Models)
+}
+
+func (suite *ParserSuite) CheckGetStructArrayByString(op *parser.Operation) {
+	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
+	assert.Equal(suite.T(), "GetStructArrayByString", op.Nickname, "Nickname not parsed")
+	assert.Equal(suite.T(), "array", op.Type, "Type not parsed")
+	assert.Equal(suite.T(), "github.com.yvasiyarov.swagger.example.SimpleStructureWithAnnotations", op.Items.Ref, "Type not parsed")
+
+	assert.Equal(suite.T(), op.Path, "/testapi/get-struct-array-by-string/{some_id}", "Resource path invalid")
+
+	expectedTypes := []string{parser.ContentTypeJson}
+	assert.Equal(suite.T(), op.Produces, expectedTypes, "Produced types not added correctly")
+	assert.Equal(suite.T(), op.Consumes, expectedTypes, "Consumed types not added correctly")
+
+	assert.Len(suite.T(), op.Parameters, 3, "Params not parsed")
+	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
+
+	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
+}
+
+func (suite *ParserSuite) CheckGetInterface(op *parser.Operation) {
+	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
+	assert.Equal(suite.T(), "GetInterface", op.Nickname, "Nickname not parsed")
+	assert.Equal(suite.T(), "github.com.yvasiyarov.swagger.example.InterfaceType", op.Type, "Type not parsed")
+
+	assert.Equal(suite.T(), op.Path, "/testapi/get-interface", "Resource path invalid")
+
+	expectedTypes := []string{parser.ContentTypeJson}
+	assert.Equal(suite.T(), op.Produces, expectedTypes, "Produced types not added correctly")
+	assert.Equal(suite.T(), op.Consumes, expectedTypes, "Consumed types not added correctly")
+
+	assert.Len(suite.T(), op.Parameters, 0, "Params not parsed")
+	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
+
 	suite.T().Log("Models list:")
 	for _, m := range op.Models {
 		suite.T().Log(m)
 	}
 
-	assert.Len(suite.T(), op.Models, 1, "Models not parsed %#v", op.Models)
+	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
+}
+
+func (suite *ParserSuite) CheckGetSimpleAliased(op *parser.Operation) {
+	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
+	assert.Equal(suite.T(), "GetSimpleAliased", op.Nickname, "Nickname not parsed")
+	assert.Equal(suite.T(), "github.com.yvasiyarov.swagger.example.SimpleAlias", op.Type, "Type not parsed")
+
+	assert.Equal(suite.T(), op.Path, "/testapi/get-simple-aliased", "Resource path invalid")
+
+	expectedTypes := []string{parser.ContentTypeJson}
+	assert.Equal(suite.T(), op.Produces, expectedTypes, "Produced types not added correctly")
+	assert.Equal(suite.T(), op.Consumes, expectedTypes, "Consumed types not added correctly")
+
+	assert.Len(suite.T(), op.Parameters, 0, "Params not parsed")
+	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
+
+	suite.T().Log("Models list:")
+	for _, m := range op.Models {
+		suite.T().Log(m)
+	}
+
+	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
+}
+
+func (suite *ParserSuite) CheckGetArrayOfInterfaces(op *parser.Operation) {
+	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
+	assert.Equal(suite.T(), "GetArrayOfInterfaces", op.Nickname, "Nickname not parsed")
+	assert.Equal(suite.T(), "array", op.Type, "Type not parsed")
+	assert.Equal(suite.T(), "github.com.yvasiyarov.swagger.example.InterfaceType", op.Items.Ref, "Type not parsed")
+
+	assert.Equal(suite.T(), op.Path, "/testapi/get-array-of-interfaces", "Resource path invalid")
+
+	expectedTypes := []string{parser.ContentTypeJson}
+	assert.Equal(suite.T(), op.Produces, expectedTypes, "Produced types not added correctly")
+	assert.Equal(suite.T(), op.Consumes, expectedTypes, "Consumed types not added correctly")
+
+	assert.Len(suite.T(), op.Parameters, 0, "Params not parsed")
+	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
+
+	suite.T().Log("Models list:")
+	for _, m := range op.Models {
+		suite.T().Log(m)
+	}
+
+	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
+}
+
+func (suite *ParserSuite) CheckGetStruct3(op *parser.Operation) {
+	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
+	assert.Equal(suite.T(), "GetStruct3", op.Nickname, "Nickname not parsed")
+	assert.Equal(suite.T(), "github.com.yvasiyarov.swagger.example.StructureWithSlice", op.Type, "Type not parsed")
+
+	assert.Equal(suite.T(), op.Path, "/testapi/get-struct3", "Resource path invalid")
+
+	expectedTypes := []string{parser.ContentTypeJson}
+	assert.Equal(suite.T(), op.Produces, expectedTypes, "Produced types not added correctly")
+	assert.Equal(suite.T(), op.Consumes, expectedTypes, "Consumed types not added correctly")
+
+	assert.Len(suite.T(), op.Parameters, 0, "Params not parsed")
+	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
+
+	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
 }
 
 func (suite *ParserSuite) CheckModelList(topApi *parser.ApiDeclaration) {
-	assert.Len(suite.T(), topApi.Models, 6, "Models was not parsed corectly")
+	assert.Len(suite.T(), topApi.Models, 7, "Models was not parsed corectly")
 
 	for _, model := range topApi.Models {
 		switch model.Id {

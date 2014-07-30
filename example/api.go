@@ -76,7 +76,7 @@ func (c *Context) GetSimpleArrayByString(rw web.ResponseWriter, req *web.Request
 // @Param   some_id     path    string     true        "Some ID"
 // @Param   offset     query    int     true        "Offset"
 // @Param   limit      query    int     true        "Offset"
-// @Success 200 {array} string
+// @Success 200 {array} SimpleStructureWithAnnotations
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
 // @router /testapi/get-struct-array-by-string/{some_id} [get]
@@ -113,7 +113,7 @@ func (c *Context) GetSimpleAliased(rw web.ResponseWriter, req *web.Request) {
 // @Title GetArrayOfInterfaces
 // @Description get array of interfaces
 // @Accept  json
-// @Success 200 {object} InterfaceType
+// @Success 200 {array} InterfaceType
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
 // @router /testapi/get-array-of-interfaces [get]
