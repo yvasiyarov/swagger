@@ -17,7 +17,7 @@ Declarative Comments Format
 
 Use the following annotation comments to describe the API as a whole.
 They should be placed in the "main" file of your application, above the "package" keyword.
-The @-tags are not case sensitive, but it is recommended to use the casing as shown, to be consistent.
+The @-tags are not case sensitive (TODO Is this true?), but it is recommended to use the casing as shown, to be consistent.
 Each of these annotations take a single argument that is an unquoted string to the end of the line.
 The purpose of each annotation should be self-explanatory.
 They are all optional, although using at least @Title and @Description is highly recommended.
@@ -41,13 +41,13 @@ NOTE: This is problematic for an application that is microservices-centric, rath
 The @SubApi annotation is an opportunity to define each resource.
 
     // @SubApi Order management API [/orders]
-    // @SubApi Statistic gavering API [/cache-stats]
+    // @SubApi Statistic gathering API [/cache-stats]
 
-@SubAPI comment should also be placed above the "package" keyword of the "main" file of your application. You can declare several sub-API's, one after the other. The format of the SubApi annotation is simple:
+These @SubApi comments should also be placed above the "package" keyword of the "main" file of your application. You can declare several sub-API's, one after the other. The format of the @SubApi annotation is simple:
 
     // @SubApi DESCRIPTION [URI]
 
-URI must have leading slash. This description is not mandatory, but if you forget it, then you will have an ugly looking document. :-)
+URI must have leading slash. The description is not mandatory, but if you forget it, then you will have an ugly looking document. :-)
 
 
 ### API Operation
@@ -68,16 +68,16 @@ Please, refer to the following example when reviewing the notes, below:
     // @Failure 400 {object} my_api.ErrorResponse    Customer ID must be specified
     // @router /orders/by-customer/{customer_id} [get]
 
-Let's describe every line in details:
+Let's discuss every line in detail:
 * The @Title provides a "nickname", in Swagger terms, to the operation. It is kind of an "alias" for this API operation. Only [A-Za-z0-9] characters are allowed. It's required, but only used internally. Swagger UI does not display it.
 * @Description - A longer description for the operation. (An unquoted string to the end of line.)
 * @Accept - One of json/xml/plain/html. Should be equal to "Accept" header of your API.
-* @Param - Defines a parameter that is accepted by this API operation. This comment have the following format:
+* @Param - Defines a parameter that is accepted by this API operation. This comment has the following format:
  @Param  param_name  transport_type  data_type  required  "description"
  * param_name  - name of the parameter.
- * transport_type  - define how this parameter should be passed to your API. Can be one of path/query/form/header/body
+ * transport_type  - defines how this parameter is passed to the operation. Can be one of path/query/form/header/body
  * data_type  - type of parameter
- * required - can be true or false
+ * required - Whether or not the parameter is mandatory (true or false).
  * description - parameter description. Must be quoted.
 * @Success/@Failure - Use these annotations to define the possible responses by the API operation. The format is as follows:
  @Success http_response_code response_type response_data_type response_description
@@ -109,9 +109,10 @@ TODO: implement example API :-)
 
 TODO
 ----
-1. Write better documentation
-2. Document used data structures and methods
+1. Write better documentation.
+2. Document the data structures and methods used.
 3. Figure out a recommended approach for documenting the API of a microservice-centric system, as opposed to a resource-centric system. This might include: documenting best practices, changing this generator code to understand additional annotation types, and/or recommending changes to the Swagger specification.
+4. The @router annotation is defined with a lower-case "r" but all of the other annotations are capitalized. Was this on purpose, or accidental? Can we change it to be consistent?
 
 Known Limitations
 -----------------
