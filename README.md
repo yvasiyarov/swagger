@@ -49,7 +49,7 @@ This comments is most important for swagger UI generation. Please, see example b
     // @Param   created_to      query   string  false        "Date-time string, MySQL format. If specified, API will retrieve orders that were created before created_to"
     // @Success 200 {array}  my_api.model.OrderRow
     // @Failure 400 {object} my_api.ErrorResponse    Customer ID must be specified
-    // @router /orders/by-customer/{customer_id} [get]
+    // @Router /orders/by-customer/{customer_id} [get]
 
 Lets describe every line in details:  
 * @Title comment is "nickname" in swagger terms. Kind of "alias" for this API operation. Only [a-Z0-9] characters are allowed.  Its used only in automatic swagger client generators
@@ -68,8 +68,8 @@ Lets describe every line in details:
  * response_type - can be {object} or {array} - if your method return array of elements
  * response_data_type - data type of your response. Can be one of Go build in types, or your custom type. All interface types will be displayed just as "interface". Its not possible to find out which type it will has at parsing time.  
  * response_description - optional. Usually make sense only for error responses
-* @router - define route path, which should be used to call this API operation. It has following format:  
- @router request_path [request_method]    
+* @Router - define route path, which should be used to call this API operation. It has following format:  
+ @Router request_path [request_method]    
  * reqiest_path which should be used by to make request to this API endpoint. It can include placeholders for parameters with transport type equal "path". Look at the example above. 
  * request_method - just HTTP request method (get/post/etc..)
  

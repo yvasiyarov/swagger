@@ -49,13 +49,13 @@ func (suite *OperationSuite) TestParseAcceptComment() {
 
 func (suite *OperationSuite) TestParseRouterComment() {
 	op := parser.NewOperation(suite.parser, "test")
-	err := op.ParseRouterComment("@router /customer/get-wishlist/ [get]")
+	err := op.ParseRouterComment("@Router /customer/get-wishlist/ [get]")
 	assert.Nil(suite.T(), err, "Can not parse router comment")
 	assert.Equal(suite.T(), op.Path, "/customer/get-wishlist/", "Can not parse router comment")
 	assert.Equal(suite.T(), op.HttpMethod, "GET", "Can not parse router comment")
 
 	op2 := parser.NewOperation(suite.parser, "test")
-	err2 := op2.ParseRouterComment("@router /customer/get-wishlist/{id} [PoSt]")
+	err2 := op2.ParseRouterComment("@Router /customer/get-wishlist/{id} [PoSt]")
 	assert.Nil(suite.T(), err2, "Can not parse router comment")
 	assert.Equal(suite.T(), op2.Path, "/customer/get-wishlist/{id}", "Can not parse router comment")
 	assert.Equal(suite.T(), op2.HttpMethod, "POST", "Can not parse router comment")
@@ -113,7 +113,7 @@ func (suite *OperationSuite) TestParseComment() {
 // @Param   order_nr     path    string  true	"Order number"
 // @Success 200 {array}  int
 // @Failure 400 {simple} string     "Order ID must be specified"
-// @router order/by-number/{order_nr} [get]
+// @Router order/by-number/{order_nr} [get]
 `
 	op := parser.NewOperation(suite.parser, "test")
 	for _, line := range strings.Split(operationComment, "\n") {
