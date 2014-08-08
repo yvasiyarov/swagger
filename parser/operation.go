@@ -51,7 +51,7 @@ func (operation *Operation) SetItemsType(itemsType string) {
 
 func (operation *Operation) ParseComment(comment string) error {
 	commentLine := strings.TrimSpace(strings.TrimLeft(comment, "//"))
-	if strings.HasPrefix(commentLine, "@router") {
+	if strings.HasPrefix(commentLine, "@Router") {
 		if err := operation.ParseRouterComment(commentLine); err != nil {
 			return err
 		}
@@ -148,9 +148,9 @@ func (operation *Operation) ParseAcceptComment(commentLine string) error {
 	return nil
 }
 
-// @router /customer/get-wishlist/{wishlist_id} [get]
+// @Router /customer/get-wishlist/{wishlist_id} [get]
 func (operation *Operation) ParseRouterComment(commentLine string) error {
-	sourceString := strings.TrimSpace(commentLine[len("@router"):])
+	sourceString := strings.TrimSpace(commentLine[len("@Router"):])
 
 	re := regexp.MustCompile(`([\w\.\/\-{}]+)[^\[]+\[([^\]]+)`)
 	var matches []string
