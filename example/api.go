@@ -23,7 +23,7 @@ func (c *Context) WriteResponse(response interface{}) {
 // @Success 200 {object} string
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-string-by-int/{some_id} [get]
+// @Router /testapi/get-string-by-int/{some_id} [get]
 func (c *Context) GetStringByInt(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse(fmt.Sprint("Some data for %s ID", req.PathParams["some_id"]))
 }
@@ -37,7 +37,7 @@ func (c *Context) GetStringByInt(rw web.ResponseWriter, req *web.Request) {
 // @Success 200 {object} StructureWithEmbededStructure
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-struct-by-int/{some_id} [get]
+// @Router /testapi/get-struct-by-int/{some_id} [get]
 func (c *Context) GetStructByInt(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse(StructureWithEmbededStructure{})
 }
@@ -51,7 +51,7 @@ func (c *Context) GetStructByInt(rw web.ResponseWriter, req *web.Request) {
 // @Success 200 {object} StructureWithEmbededPointer
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-struct2-by-int/{some_id} [get]
+// @Router /testapi/get-struct2-by-int/{some_id} [get]
 func (c *Context) GetStruct2ByInt(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse(StructureWithEmbededPointer{})
 }
@@ -65,7 +65,7 @@ func (c *Context) GetStruct2ByInt(rw web.ResponseWriter, req *web.Request) {
 // @Success 200 {array} string
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-simple-array-by-string/{some_id} [get]
+// @Router /testapi/get-simple-array-by-string/{some_id} [get]
 func (c *Context) GetSimpleArrayByString(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse([]string{"one", "two", "three"})
 }
@@ -79,7 +79,7 @@ func (c *Context) GetSimpleArrayByString(rw web.ResponseWriter, req *web.Request
 // @Success 200 {array} SimpleStructureWithAnnotations
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-struct-array-by-string/{some_id} [get]
+// @Router /testapi/get-struct-array-by-string/{some_id} [get]
 func (c *Context) GetStructArrayByString(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse([]subpackage.SimpleStructure{
 		subpackage.SimpleStructure{},
@@ -94,7 +94,7 @@ func (c *Context) GetStructArrayByString(rw web.ResponseWriter, req *web.Request
 // @Success 200 {object} InterfaceType
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-interface [get]
+// @Router /testapi/get-interface [get]
 func (c *Context) GetInterface(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse(InterfaceType("Some string"))
 }
@@ -105,7 +105,7 @@ func (c *Context) GetInterface(rw web.ResponseWriter, req *web.Request) {
 // @Success 200 {object} SimpleAlias
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-simple-aliased [get]
+// @Router /testapi/get-simple-aliased [get]
 func (c *Context) GetSimpleAliased(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse("Some string")
 }
@@ -116,7 +116,7 @@ func (c *Context) GetSimpleAliased(rw web.ResponseWriter, req *web.Request) {
 // @Success 200 {array} InterfaceType
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-array-of-interfaces [get]
+// @Router /testapi/get-array-of-interfaces [get]
 func (c *Context) GetArrayOfInterfaces(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse([]InterfaceType{"Some string", 123, "10"})
 }
@@ -127,7 +127,7 @@ func (c *Context) GetArrayOfInterfaces(rw web.ResponseWriter, req *web.Request) 
 // @Success 200 {object} StructureWithSlice
 // @Failure 400 {object} APIError "We need ID!!"
 // @Failure 404 {object} APIError "Can not find ID"
-// @router /testapi/get-struct3 [get]
+// @Router /testapi/get-struct3 [get]
 func (c *Context) GetStruct3(rw web.ResponseWriter, req *web.Request) {
 	c.WriteResponse(StructureWithSlice{})
 }
