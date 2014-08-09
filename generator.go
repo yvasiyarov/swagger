@@ -30,7 +30,7 @@ func IsController(funcDeclaration *ast.FuncDecl) bool {
 	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
 		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
 			receiverName := fmt.Sprint(starExpression.X)
-			return strings.Index(receiverName, "Context") != -1
+			return strings.Index(receiverName, "Context") != -1 ||  strings.Index(receiverName, "Controller") != -1
 		}
 	}
 	return false
