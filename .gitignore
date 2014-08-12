@@ -24,3 +24,7 @@ _testmain.go
 
 #ignore generated file
 docs.go
+
+# IDE
+.idea
+

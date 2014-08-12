@@ -192,13 +192,43 @@ func (parser *Parser) AddOperation(op *Operation) {
 }
 
 func (parser *Parser) ParseApi(packageNames string) {
-	packages := strings.Split(packageNames, ",")
+	packages := parser.ScanPackages(strings.Split(packageNames, ","))
 	for _, packageName := range packages {
 		parser.ParseTypeDefinitions(packageName)
 	}
 	for _, packageName := range packages {
 		parser.ParseApiDescription(packageName)
 	}
+}
+
+func (parser *Parser) ScanPackages(packages []string) []string {
+	res := make([]string, len(packages))
+	existsPackages := make(map[string]bool)
+
+	for _, packageName := range packages {
+		if v, ok := existsPackages[packageName]; !ok || v == false {
+			// Add package
+			existsPackages[packageName] = true
+			res = append(res, packageName)
+			// get it's real path
+			pkgRealPath := parser.GetRealPackagePath(packageName)
+			// Then walk
+			var walker filepath.WalkFunc = func(path string, info os.FileInfo, err error) error {
+				if info.IsDir() {
+					if idx := strings.Index(path, packageName); idx != -1 {
+						pack := path[idx:]
+						if v, ok := existsPackages[pack]; !ok || v == false {
+							existsPackages[pack] = true
+							res = append(res, pack)
+						}
+					}
+				}
+				return nil
+			}
+			filepath.Walk(pkgRealPath, walker)
+		}
+	}
+	return res
 }
 
 func (parser *Parser) ParseTypeDefinitions(packageName string) {
