@@ -348,14 +348,14 @@ func (parser *Parser) ParseApiDescription(packageName string) {
 }
 
 // Parse sub api declaration
-// @SubApi Very fance API [/fancy-api]
+// @SubApi Very fancy API [/fancy-api]
 func (parser *Parser) ParseSubApiDescription(commentLine string) {
 	if !strings.HasPrefix(commentLine, "@SubApi") {
 		return
 	} else {
 		commentLine = strings.TrimSpace(commentLine[len("@SubApi"):])
 	}
-	re := regexp.MustCompile(`([\w\s]+)\[{1}([\w\_\-/]+)`)
+	re := regexp.MustCompile(`([^\[]+)\[{1}([\w\_\-/]+)`)
 
 	if matches := re.FindStringSubmatch(commentLine); len(matches) != 3 {
 		log.Printf("Can not parse sub api description %s, skipped", commentLine)
