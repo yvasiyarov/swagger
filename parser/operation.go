@@ -23,6 +23,7 @@ type Operation struct {
 	Authorizations   []Authorization   `json:"authorizations,omitempty"`
 	Protocols        []Protocol        `json:"protocols,omitempty"`
 	Path             string            `json:"-"`
+	ForceResource    string
 	parser           *Parser
 	Models           []*Model `json:"-"`
 	packageName      string
@@ -55,6 +56,12 @@ func (operation *Operation) ParseComment(comment string) error {
 		if err := operation.ParseRouterComment(commentLine); err != nil {
 			return err
 		}
+	} else if strings.HasPrefix(commentLine, "@Resource") {
+		resource := strings.TrimSpace(commentLine[len("@Resource"):])
+		if resource[0:1] == "/" {
+			resource = resource[1:]
+		}
+		operation.ForceResource = resource
 	} else if strings.HasPrefix(commentLine, "@Title") {
 		operation.Nickname = strings.TrimSpace(commentLine[len("@Title"):])
 	} else if strings.HasPrefix(commentLine, "@Description") {

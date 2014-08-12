@@ -165,16 +165,21 @@ func (parser *Parser) AddOperation(op *Operation) {
 		}
 	}
 
-	api, ok := parser.TopLevelApis[path[0]]
+	resource := path[0]
+	if op.ForceResource != "" {
+		resource = op.ForceResource
+	}
+
+	api, ok := parser.TopLevelApis[resource]
 	if !ok {
 		api = NewApiDeclaration()
 
 		api.ApiVersion = parser.Listing.ApiVersion
 		api.SwaggerVersion = SwaggerVersion
-		api.ResourcePath = "/" + path[0]
+		api.ResourcePath = "/" + resource
 		api.BasePath = parser.BasePath
 
-		parser.TopLevelApis[path[0]] = api
+		parser.TopLevelApis[resource] = api
 
 		apiRef := &ApiRef{
 			Path:        api.ResourcePath,
