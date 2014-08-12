@@ -96,7 +96,7 @@ Let's discuss every line in detail:
 
 Quick Start Guide
 -----------------
-TODO: implement example API :-)
+
 1. Add comments to your API
 2. Change IsController function in generator.go. It should return true if provided function declaration is "controller"
 3. Run generator API:
@@ -114,11 +114,14 @@ TODO: implement example API :-)
 
 TODO
 ----
+
 1. Write better documentation.
 2. Document the data structures and methods used.
+3. Implement an example API.
 
 Known Limitations
 -----------------
+
 * Interface types are not supported, because it's not possible to resolve them to actual implementations are parse-time. All interface values will be displayed just as "interface".
 * Types that implement the Marshaler/Unmarshaler interface. Marshaling of this types will produce unpredictable JSON (at parse-time).
 
