@@ -16,6 +16,7 @@ import (
 var apiPackage = flag.String("apiPackage", "", "Package which implement API controllers")
 var mainApiFile = flag.String("mainApiFile", "", "File with general API annotation, relatively to $GOPATH")
 var basePath = flag.String("basePath", "http://127.0.0.1:3000", "Web service base path")
+var swaggerUiPath = flag.String("swaggerUiPath", "", "(Optional) output path for Swagger UI files (instead of docs.go)")
 
 var generatedFileTemplate = `
 package main
@@ -62,6 +63,29 @@ func generateSwaggerDocs(parser *parser.Parser) {
 	fd.WriteString(doc)
 }
 
+func generateSwaggerUiFiles(parser *parser.Parser) {
+	fd, err := os.Create(path.Join(*swaggerUiPath, "index.json"))
+	if err != nil {
+		log.Fatalf("Can not create the master index.json file: %v\n", err)
+	}
+	defer fd.Close()
+	fd.WriteString(string(parser.GetResourceListingJson()))
+
+	for apiKey, apiDescription := range parser.TopLevelApis {
+		err = os.MkdirAll(path.Join(*swaggerUiPath, apiKey), 0777)
+		fd, err = os.Create(path.Join(*swaggerUiPath, apiKey, "index.json"))
+		if err != nil {
+			log.Fatalf("Can not create the %s/index.json file: %v\n", apiKey, err)
+		}
+		defer fd.Close()
+		json, err := json.MarshalIndent(apiDescription, "", "    ")
+		if err != nil {
+			log.Fatalf("Can not serialise []ApiDescription to JSON: %v\n", err)
+		}
+		fd.Write(json)
+	}
+}
+
 func InitParser() *parser.Parser {
 	parser := parser.NewParser()
 
@@ -94,7 +118,11 @@ func main() {
 	parser.ParseApi(*apiPackage)
 
 	log.Println("Finish parsing")
-	generateSwaggerDocs(parser)
+	if *swaggerUiPath == "" {
+		generateSwaggerDocs(parser)
+	} else {
+		generateSwaggerUiFiles(parser)
+	}
 
 	log.Println("Doc file generated")
 }
