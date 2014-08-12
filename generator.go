@@ -78,7 +78,11 @@ func InitParser() *parser.Parser {
 
 func main() {
 	flag.Parse()
-	if *apiPackage == "" || *mainApiFile == "" {
+
+	if *mainApiFile == "" {
+		*mainApiFile = *apiPackage + "/main.go"
+	}
+	if *apiPackage == "" {
 		flag.PrintDefaults()
 		return
 	}
