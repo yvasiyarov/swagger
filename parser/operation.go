@@ -166,7 +166,7 @@ func (operation *Operation) ParseRouterComment(commentLine string) error {
 
 // @Success 200 {object} model.OrderRow "Error message, if code != 200"
 func (operation *Operation) ParseResponseComment(commentLine string) error {
-	re := regexp.MustCompile(`([\d]+)[\s]+([\w\{\}]+)[\s]+([\w\.\/]+)[^"]*(.*)?`)
+	re := regexp.MustCompile(`([\d]+)[\s]+([\w\{\}]+)[\s]+([\w\-\.\/]+)[^"]*(.*)?`)
 	var matches []string
 
 	if matches = re.FindStringSubmatch(commentLine); len(matches) != 5 {
