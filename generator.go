@@ -20,7 +20,7 @@ var swaggerUiPath = flag.String("swaggerUiPath", "", "(Optional) output path for
 
 var generatedFileTemplate = `
 package main
-//This file is generated automatically. Dont try to edit it manually.
+//This file is generated automatically. Do not try to edit it manually.
 
 var resourceListingJson = {{resourceListing}}
 var apiDescriptionsJson = {{apiDescriptions}}
