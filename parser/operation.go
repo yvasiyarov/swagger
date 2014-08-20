@@ -139,16 +139,16 @@ func (operation *Operation) ParseAcceptComment(commentLine string) error {
 	accepts := strings.Split(strings.TrimSpace(strings.TrimSpace(commentLine[len("@Accept"):])), ",")
 	for _, a := range accepts {
 		switch a {
-		case "json":
+		case "json", "application/json":
 			operation.Consumes = append(operation.Consumes, ContentTypeJson)
 			operation.Produces = append(operation.Produces, ContentTypeJson)
-		case "xml":
+		case "xml", "text/xml":
 			operation.Consumes = append(operation.Consumes, ContentTypeXml)
 			operation.Produces = append(operation.Produces, ContentTypeXml)
-		case "plain":
+		case "plain", "text/plain":
 			operation.Consumes = append(operation.Consumes, ContentTypePlain)
 			operation.Produces = append(operation.Produces, ContentTypePlain)
-		case "html":
+		case "html", "text/html":
 			operation.Consumes = append(operation.Consumes, ContentTypeHtml)
 			operation.Produces = append(operation.Produces, ContentTypeHtml)
 		}
