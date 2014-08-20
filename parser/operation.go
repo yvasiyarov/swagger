@@ -52,35 +52,36 @@ func (operation *Operation) SetItemsType(itemsType string) {
 
 func (operation *Operation) ParseComment(comment string) error {
 	commentLine := strings.TrimSpace(strings.TrimLeft(comment, "//"))
-	if strings.HasPrefix(commentLine, "@Router") {
+	attribute := strings.ToLower(strings.Split(commentLine, " ")[0])
+	if attribute == "@router" {
 		if err := operation.ParseRouterComment(commentLine); err != nil {
 			return err
 		}
-	} else if strings.HasPrefix(commentLine, "@Resource") {
+	} else if attribute == "@resource" {
 		resource := strings.TrimSpace(commentLine[len("@Resource"):])
 		if resource[0:1] == "/" {
 			resource = resource[1:]
 		}
 		operation.ForceResource = resource
-	} else if strings.HasPrefix(commentLine, "@Title") {
+	} else if attribute == "@title" {
 		operation.Nickname = strings.TrimSpace(commentLine[len("@Title"):])
-	} else if strings.HasPrefix(commentLine, "@Description") {
+	} else if attribute == "@description" {
 		operation.Summary = strings.TrimSpace(commentLine[len("@Description"):])
-	} else if strings.HasPrefix(commentLine, "@Success") {
+	} else if attribute == "@success" {
 		sourceString := strings.TrimSpace(commentLine[len("@Success"):])
 		if err := operation.ParseResponseComment(sourceString); err != nil {
 			return err
 		}
-	} else if strings.HasPrefix(commentLine, "@Param") {
+	} else if attribute == "@param" {
 		if err := operation.ParseParamComment(commentLine); err != nil {
 			return err
 		}
-	} else if strings.HasPrefix(commentLine, "@Failure") {
+	} else if attribute == "@failure" {
 		sourceString := strings.TrimSpace(commentLine[len("@Failure"):])
 		if err := operation.ParseResponseComment(sourceString); err != nil {
 			return err
 		}
-	} else if strings.HasPrefix(commentLine, "@Accept") {
+	} else if attribute == "@accept" {
 		if err := operation.ParseAcceptComment(commentLine); err != nil {
 			return err
 		}
