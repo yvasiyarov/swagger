@@ -72,7 +72,7 @@ Please, refer to the following example when reviewing the notes, below:
 Let's discuss every line in detail:
 * The @Title provides a "nickname", in Swagger terms, to the operation. It is kind of an "alias" for this API operation. Only [A-Za-z0-9] characters are allowed. It's required, but only used internally. Swagger UI does not display it.
 * @Description - A longer description for the operation. (An unquoted string to the end of line.)
-* @Accept - One of json/xml/plain/html. Should be equal to "Accept" header of your API.
+* @Accept - One of: json, xml, plain, or html. (Can also be one of their fully qualified alternatives: application/json, text/xml, text/plain, or text/html.) Should be equal to the "Accept" header of your API.
 * @Param - Defines a parameter that is accepted by this API operation. This comment has the following format:
  @Param  param_name  transport_type  data_type  required  "description"
  * param_name  - name of the parameter.
