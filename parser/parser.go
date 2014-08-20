@@ -59,19 +59,21 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
 			for _, commentLine := range strings.Split(comment.Text(), "\n") {
-				if strings.HasPrefix(commentLine, "@APIVersion") {
+				attribute := strings.ToLower(strings.Split(commentLine, " ")[0])
+				switch attribute {
+				case "@apiversion":
 					parser.Listing.ApiVersion = strings.TrimSpace(commentLine[len("@APIVersion"):])
-				} else if strings.HasPrefix(commentLine, "@Title") {
+				case "@title":
 					parser.Listing.Infos.Title = strings.TrimSpace(commentLine[len("@Title"):])
-				} else if strings.HasPrefix(commentLine, "@Description") {
+				case "@description":
 					parser.Listing.Infos.Description = strings.TrimSpace(commentLine[len("@Description"):])
-				} else if strings.HasPrefix(commentLine, "@TermsOfServiceUrl") {
+				case "@termsofserviceurl":
 					parser.Listing.Infos.TermsOfServiceUrl = strings.TrimSpace(commentLine[len("@TermsOfServiceUrl"):])
-				} else if strings.HasPrefix(commentLine, "@Contact") {
+				case "@contact":
 					parser.Listing.Infos.Contact = strings.TrimSpace(commentLine[len("@Contact"):])
-				} else if strings.HasPrefix(commentLine, "@LicenseUrl") {
+				case "@licenseurl":
 					parser.Listing.Infos.LicenseUrl = strings.TrimSpace(commentLine[len("@LicenseUrl"):])
-				} else if strings.HasPrefix(commentLine, "@License") {
+				case "@license":
 					parser.Listing.Infos.License = strings.TrimSpace(commentLine[len("@License"):])
 				}
 			}

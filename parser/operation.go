@@ -53,35 +53,36 @@ func (operation *Operation) SetItemsType(itemsType string) {
 func (operation *Operation) ParseComment(comment string) error {
 	commentLine := strings.TrimSpace(strings.TrimLeft(comment, "//"))
 	attribute := strings.ToLower(strings.Split(commentLine, " ")[0])
-	if attribute == "@router" {
+	switch attribute {
+	case "@router":
 		if err := operation.ParseRouterComment(commentLine); err != nil {
 			return err
 		}
-	} else if attribute == "@resource" {
+	case "@resource":
 		resource := strings.TrimSpace(commentLine[len("@Resource"):])
 		if resource[0:1] == "/" {
 			resource = resource[1:]
 		}
 		operation.ForceResource = resource
-	} else if attribute == "@title" {
+	case "@title":
 		operation.Nickname = strings.TrimSpace(commentLine[len("@Title"):])
-	} else if attribute == "@description" {
+	case "@description":
 		operation.Summary = strings.TrimSpace(commentLine[len("@Description"):])
-	} else if attribute == "@success" {
+	case "@success":
 		sourceString := strings.TrimSpace(commentLine[len("@Success"):])
 		if err := operation.ParseResponseComment(sourceString); err != nil {
 			return err
 		}
-	} else if attribute == "@param" {
+	case "@param":
 		if err := operation.ParseParamComment(commentLine); err != nil {
 			return err
 		}
-	} else if attribute == "@failure" {
+	case "@failure":
 		sourceString := strings.TrimSpace(commentLine[len("@Failure"):])
 		if err := operation.ParseResponseComment(sourceString); err != nil {
 			return err
 		}
-	} else if attribute == "@accept" {
+	case "@accept":
 		if err := operation.ParseAcceptComment(commentLine); err != nil {
 			return err
 		}
