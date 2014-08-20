@@ -23,7 +23,7 @@ type Operation struct {
 	Authorizations   []Authorization   `json:"authorizations,omitempty"`
 	Protocols        []Protocol        `json:"protocols,omitempty"`
 	Path             string            `json:"-"`
-	ForceResource    string
+	ForceResource    string            `json:"-"`
 	parser           *Parser
 	Models           []*Model `json:"-"`
 	packageName      string
