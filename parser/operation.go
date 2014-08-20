@@ -189,9 +189,7 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 	response.Message = strings.Trim(matches[4], "\"")
 
 	typeName := ""
-	if matches[3] == "error" {
-		typeName = "string"
-	} else if IsBasicType(matches[3]) {
+	if matches[3] == "error" || IsBasicType(matches[3]) {
 		typeName = matches[3]
 	} else {
 		model := NewModel(operation.parser)
