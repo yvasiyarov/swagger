@@ -84,7 +84,7 @@ Let's discuss every line in detail:
  @Success http_response_code response_type response_data_type response_description
  * http_response_code 200 for success response, any other code for failure.
  * response_type - can be {object} or {array} -- depending on whether the operation returns a single JSON object, or an array of objects
- * response_data_type - data type of your response. Can be one of the Go built-in types (including error), or your custom type. All interface types will be displayed just as "interface". (It's not possible to find out which type it will has at parsing time.) Note: Technically, "error" is not a built-in type, but it's allowed here as a synonym for "string".
+ * response_data_type - data type of your response. Can be one of the Go built-in types, including error (which is actually a built-in interface, not a built-in type), or your custom type. All interface types except "error" will be displayed just as "interface". (It's not possible to find out which type it will has at parsing time.)
  * response_description - optional. It usually only makes sense for error responses.
 * @Router - define route path, which should be used to call this API operation. It has the following format:
  @Router request_path [request_method]
