@@ -31,7 +31,7 @@ func IsController(funcDeclaration *ast.FuncDecl) bool {
 	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
 		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
 			receiverName := fmt.Sprint(starExpression.X)
-			return strings.Index(receiverName, "Context") != -1 ||  strings.Index(receiverName, "Controller") != -1
+			return strings.Index(receiverName, "Context") != -1 || strings.Index(receiverName, "Controller") != -1
 		}
 	}
 	return false
@@ -63,6 +63,39 @@ func generateSwaggerDocs(parser *parser.Parser) {
 	fd.WriteString(doc)
 }
 
+func generateMarkup(parser *parser.Parser, markup Markup) {
+	fd, err := os.Create(path.Join("./", "api.adoc"))
+	if err != nil {
+		log.Fatalf("Can not create document file: %v\n", err)
+	}
+	defer fd.Close()
+
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("= %s\n\n", parser.Listing.Infos.Title))
+	buf.WriteString(fmt.Sprintf("%s\n\n", parser.Listing.Infos.Description))
+	buf.WriteString(markup.tableHeader("Summary of Resources"))
+	buf.WriteString(markup.tableRow("Resource", "Description"))
+
+	for _, ref := range parser.Listing.Apis {
+		buf.WriteString(markup.tableRow(markup.link(ref.Path[1:], ""), ref.Description))
+	}
+	buf.WriteString(markup.tableFooter())
+
+	for apiKey, apiDescription := range parser.TopLevelApis {
+		buf.WriteString(fmt.Sprintf("[[%s]]\n== %s\n\n", apiKey, apiKey))
+
+		json, err := json.MarshalIndent(apiDescription, "", "    ")
+		if err != nil {
+			log.Fatalf("Can not serialise []ApiDescription to JSON: %v\n", err)
+		}
+		buf.WriteString("----------\n\n")
+		buf.WriteString("// TODO The following json is a temporary placeholder. It still needs to be converted to AsciDoc format...\n\n")
+		buf.Write(json)
+		buf.WriteString("\n----------\n\n\n")
+	}
+
+	fd.WriteString(buf.String())
+}
 func generateSwaggerUiFiles(parser *parser.Parser) {
 	fd, err := os.Create(path.Join(*swaggerUiPath, "index.json"))
 	if err != nil {
@@ -83,6 +116,7 @@ func generateSwaggerUiFiles(parser *parser.Parser) {
 			log.Fatalf("Can not serialise []ApiDescription to JSON: %v\n", err)
 		}
 		fd.Write(json)
+		log.Printf("Wrote %v/index.json", apiKey)
 	}
 }
 
@@ -124,9 +158,15 @@ func main() {
 	log.Println("Finish parsing")
 	if *swaggerUiPath == "" {
 		generateSwaggerDocs(parser)
+		log.Println("Doc file generated")
+	} else if *swaggerUiPath == "AsciiDoc" {
+		markupAsciiDoc := new(MarkupAsciiDoc)
+
+		generateMarkup(parser, markupAsciiDoc)
+		log.Println("AsciiDoc file generated")
 	} else {
 		generateSwaggerUiFiles(parser)
+		log.Println("Swagger UI files generated")
 	}
 
-	log.Println("Doc file generated")
 }
