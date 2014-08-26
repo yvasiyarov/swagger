@@ -21,7 +21,7 @@ var apiPackage = flag.String("apiPackage", "", "The package that implements the 
 var mainApiFile = flag.String("mainApiFile", "", "The file that contains the general API annotations, relative to $GOPATH/src")
 var basePath = flag.String("basePath", "http://127.0.0.1:3000", "Web service base path")
 var outputFormat = flag.String("format", "go", "Output format type for the generated files: "+AVAILABLE_FORMATS)
-var outputPath = flag.String("output", "", "Output path for the generated files (current folder is the default)")
+var outputSpec = flag.String("output", "", "Output (path) for the generated file(s)")
 
 var generatedFileTemplate = `
 package main
@@ -68,8 +68,14 @@ func generateSwaggerDocs(parser *parser.Parser) {
 	fd.WriteString(doc)
 }
 
-func generateMarkup(parser *parser.Parser, markup Markup) {
-	fd, err := os.Create(path.Join("./", "api.adoc"))
+func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) {
+	var filename string
+	if *outputSpec == "" {
+		filename = path.Join("./", "API", fileExtension)
+	} else {
+		filename = path.Join(*outputSpec)
+	}
+	fd, err := os.Create(filename)
 	if err != nil {
 		log.Fatalf("Can not create document file: %v\n", err)
 	}
@@ -86,9 +92,9 @@ func generateMarkup(parser *parser.Parser, markup Markup) {
 	/***************************************************************
 	* Table of Contents (List of Sub-APIs)
 	***************************************************************/
-	buf.WriteString(markup.sectionHeader(2, "Table of Contents"))
+	buf.WriteString("Table of Contents\n\n")
 	for _, ref := range parser.Listing.Apis {
-		buf.WriteString(markup.numberedItem(1, markup.link(ref.Path[1:], "")+" "+ref.Description))
+		buf.WriteString(markup.numberedItem(1, markup.link(ref.Path[1:], ref.Description)))
 	}
 	buf.WriteString("\n")
 
@@ -104,19 +110,9 @@ func generateMarkup(parser *parser.Parser, markup Markup) {
 		buf.WriteString(markup.tableRow("Resource Path", apiDescription.ResourcePath))
 		buf.WriteString(markup.tableRow("API Version", apiDescription.ApiVersion))
 		buf.WriteString(markup.tableRow("BasePath for the API", apiDescription.BasePath))
+		buf.WriteString(markup.tableRow("Consumes", strings.Join(apiDescription.Consumes, ", ")))
+		buf.WriteString(markup.tableRow("Produces", strings.Join(apiDescription.Produces, ", ")))
 		buf.WriteString(markup.tableFooter())
-
-		buf.WriteString("\nConsumes:\n\n")
-		for _, consumed := range apiDescription.Consumes {
-			buf.WriteString(markup.bulletedItem(1, consumed))
-		}
-		buf.WriteString("\n")
-
-		buf.WriteString("\nProduces:\n\n")
-		for _, produced := range apiDescription.Produces {
-			buf.WriteString(markup.bulletedItem(1, produced))
-		}
-		buf.WriteString("\n")
 
 		/***************************************************************
 		* Sub-API Operations (Summary)
@@ -176,7 +172,7 @@ func generateMarkup(parser *parser.Parser, markup Markup) {
 	fd.WriteString(buf.String())
 }
 func generateSwaggerUiFiles(parser *parser.Parser) {
-	fd, err := os.Create(path.Join(*outputPath, "index.json"))
+	fd, err := os.Create(path.Join(*outputSpec, "index.json"))
 	if err != nil {
 		log.Fatalf("Can not create the master index.json file: %v\n", err)
 	}
@@ -184,8 +180,8 @@ func generateSwaggerUiFiles(parser *parser.Parser) {
 	fd.WriteString(string(parser.GetResourceListingJson()))
 
 	for apiKey, apiDescription := range parser.TopLevelApis {
-		err = os.MkdirAll(path.Join(*outputPath, apiKey), 0777)
-		fd, err = os.Create(path.Join(*outputPath, apiKey, "index.json"))
+		err = os.MkdirAll(path.Join(*outputSpec, apiKey), 0777)
+		fd, err = os.Create(path.Join(*outputSpec, apiKey, "index.json"))
 		if err != nil {
 			log.Fatalf("Can not create the %s/index.json file: %v\n", apiKey, err)
 		}
@@ -242,11 +238,11 @@ func main() {
 		log.Println("Doc file generated")
 	case "asciidoc":
 		markupAsciiDoc := new(MarkupAsciiDoc)
-		generateMarkup(parser, markupAsciiDoc)
+		generateMarkup(parser, markupAsciiDoc, ".adoc")
 		log.Println("AsciiDoc file generated")
 	case "markdown":
 		// markupMarkdown := new(MarkupMarkdown)
-		// generateMarkup(parser, markupMarkdown)
+		// generateMarkup(parser, markupMarkdown, ".md")
 		// log.Println("Markdown file generated")
 	case "swagger":
 		generateSwaggerUiFiles(parser)
