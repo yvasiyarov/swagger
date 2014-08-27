@@ -126,7 +126,7 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 		for _, subapi := range apiDescription.Apis {
 			for _, op := range subapi.Operations {
 				pathString := strings.Replace(strings.Replace(subapi.Path, "{", "\\{", -1), "}", "\\}", -1)
-				buf.WriteString(markup.tableRow(markup.link(op.Nickname, pathString), markup.link(op.Nickname, op.HttpMethod), markup.link(op.Nickname, op.Summary)))
+				buf.WriteString(markup.tableRow(pathString, markup.link(op.Nickname, op.HttpMethod), op.Summary))
 			}
 		}
 		buf.WriteString(markup.tableFooter())
@@ -160,17 +160,49 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 					buf.WriteString(markup.tableHeader(""))
 					buf.WriteString(markup.tableRow("Code", "Message", "Model"))
 					for _, msg := range op.ResponseMessages {
-						buf.WriteString(markup.tableRow(fmt.Sprintf("%v", msg.Code), msg.Message, msg.ResponseModel))
+						shortName := shortModelName(msg.ResponseModel)
+						modelText := shortName
+						if msg.ResponseModel != shortName {
+							modelText = markup.link(msg.ResponseModel, shortName)
+						}
+						buf.WriteString(markup.tableRow(fmt.Sprintf("%v", msg.Code), msg.Message, modelText))
 					}
 					buf.WriteString(markup.tableFooter())
 				}
 			}
 		}
 		buf.WriteString("\n")
+
+		/***************************************************************
+		* Models
+		***************************************************************/
+		buf.WriteString("\n")
+		buf.WriteString(markup.sectionHeader(3, "Models"))
+		buf.WriteString("\n")
+
+		for modelKey, model := range apiDescription.Models {
+			buf.WriteString(markup.anchor(modelKey))
+			buf.WriteString(markup.sectionHeader(4, shortModelName(modelKey)))
+			buf.WriteString(markup.tableHeader(""))
+			buf.WriteString(markup.tableRow("Field Name", "Field Type", "Description"))
+			for fieldName, fieldProps := range model.Properties {
+				buf.WriteString(markup.tableRow(fieldName, fieldProps.Type, fieldProps.Description))
+			}
+			buf.WriteString(markup.tableFooter())
+			buf.WriteString("\nNote: These fields are listed in random order (for now).\n")
+		}
+		buf.WriteString("\n")
+
 	}
 
 	fd.WriteString(buf.String())
 }
+
+func shortModelName(longModelName string) string {
+	parts := strings.Split(longModelName, ".")
+	return parts[len(parts)-1]
+}
+
 func generateSwaggerUiFiles(parser *parser.Parser) {
 	fd, err := os.Create(path.Join(*outputSpec, "index.json"))
 	if err != nil {
