@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -68,6 +69,28 @@ func generateSwaggerDocs(parser *parser.Parser) {
 	fd.WriteString(doc)
 }
 
+func alphabeticalKeysOfSubApis(refs []*parser.ApiRef) ([]string, map[string]int) {
+	index := map[string]int{}
+	keys := make([]string, len(refs))
+	for i, ref := range refs {
+		subApiKey := ref.Path[1:]
+		keys[i] = subApiKey
+		index[subApiKey] = i
+	}
+	sort.Strings(keys)
+	return keys, index
+}
+func alphabeticalKeysOfApiDeclaration(m map[string]*parser.ApiDeclaration) []string {
+	keys := make([]string, len(m))
+	i := 0
+	for key, _ := range m {
+		keys[i] = key
+		i++
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) {
 	var filename string
 	if *outputSpec == "" {
@@ -93,12 +116,15 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 	* Table of Contents (List of Sub-APIs)
 	***************************************************************/
 	buf.WriteString("Table of Contents\n\n")
-	for _, ref := range parser.Listing.Apis {
-		buf.WriteString(markup.numberedItem(1, markup.link(ref.Path[1:], ref.Description)))
+	subApiKeys, subApiKeyIndex := alphabeticalKeysOfSubApis(parser.Listing.Apis)
+	for _, subApiKey := range subApiKeys {
+		buf.WriteString(markup.numberedItem(1, markup.link(subApiKey, parser.Listing.Apis[subApiKeyIndex[subApiKey]].Description)))
 	}
 	buf.WriteString("\n")
 
-	for apiKey, apiDescription := range parser.TopLevelApis {
+	for _, apiKey := range alphabeticalKeysOfApiDeclaration(parser.TopLevelApis) {
+
+		apiDescription := parser.TopLevelApis[apiKey]
 		/***************************************************************
 		* Sub-API Specifications
 		***************************************************************/
