@@ -196,7 +196,8 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 	} else {
 		model := NewModel(operation.parser)
 		response.ResponseModel = matches[3]
-		if err, innerModels := model.ParseModel(response.ResponseModel, operation.parser.CurrentPackage); err != nil {
+		knownModelNames := map[string]bool{}
+		if err, innerModels := model.ParseModel(response.ResponseModel, operation.parser.CurrentPackage, &knownModelNames); err != nil {
 			return err
 		} else {
 			typeName = model.Id
