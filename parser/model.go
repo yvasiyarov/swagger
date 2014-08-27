@@ -23,7 +23,7 @@ func NewModel(p *Parser) *Model {
 
 // modelName is something like package.subpackage.SomeModel or just "subpackage.SomeModel"
 func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*Model) {
-	//log.Printf("Before parse model |%s|, package: |%s|\n", modelName, currentPackage)
+	// log.Printf("Before parse model |%s|, package: |%s|\n", modelName, currentPackage)
 
 	astTypeSpec, modelPackage := m.parser.FindModelDefinition(modelName, currentPackage)
 
@@ -82,7 +82,7 @@ func (m *Model) ParseModel(modelName string, currentPackage string) (error, []*M
 			}
 		}
 		//log.Printf("After parse inner model list: %#v\n (%s)", usedTypes, modelName)
-		//log.Fatalf("Inner model list: %#v\n", innerModelList)
+		// log.Fatalf("Inner model list: %#v\n", innerModelList)
 
 	}
 
@@ -109,11 +109,13 @@ func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 	property := NewModelProperty()
 
 	typeAsString := property.GetTypeAsString(field.Type)
-	//	log.Printf("Get type as string %s \n", typeAsString)
+	//log.Printf("Get type as string %s \n", typeAsString)
 
 	if strings.HasPrefix(typeAsString, "[]") {
 		property.Type = "array"
 		property.SetItemType(typeAsString[2:])
+	} else if typeAsString == "&{time Time}" {
+		property.Type = "Time"
 	} else {
 		property.Type = typeAsString
 	}
@@ -220,6 +222,8 @@ var basicTypes = map[string]bool{
 	"byte":       true,
 	"rune":       true,
 	"uintptr":    true,
+	"error":      true,
+	"Time":       true,
 }
 
 func IsBasicType(typeName string) bool {
