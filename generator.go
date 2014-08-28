@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	AVAILABLE_FORMATS = "go|swagger|asciidoc|markdown"
+	AVAILABLE_FORMATS = "go|swagger|asciidoc|markdown|confluence"
 )
 
 var apiPackage = flag.String("apiPackage", "", "The package that implements the API controllers, relative to $GOPATH/src")
@@ -132,7 +132,7 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 		buf.WriteString(markup.sectionHeader(2, apiKey))
 
 		buf.WriteString(markup.tableHeader(""))
-		buf.WriteString(markup.tableRow("Specification", "Value"))
+		buf.WriteString(markup.tableHeaderRow("Specification", "Value"))
 		buf.WriteString(markup.tableRow("Resource Path", apiDescription.ResourcePath))
 		buf.WriteString(markup.tableRow("API Version", apiDescription.ApiVersion))
 		buf.WriteString(markup.tableRow("BasePath for the API", apiDescription.BasePath))
@@ -148,7 +148,7 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 		buf.WriteString("\n")
 
 		buf.WriteString(markup.tableHeader(""))
-		buf.WriteString(markup.tableRow("Resource Path", "Operation", "Description"))
+		buf.WriteString(markup.tableHeaderRow("Resource Path", "Operation", "Description"))
 		for _, subapi := range apiDescription.Apis {
 			for _, op := range subapi.Operations {
 				pathString := strings.Replace(strings.Replace(subapi.Path, "{", "\\{", -1), "}", "\\}", -1)
@@ -164,14 +164,14 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 		for _, subapi := range apiDescription.Apis {
 			for _, op := range subapi.Operations {
 				buf.WriteString("\n")
-				operationString := fmt.Sprintf("%s [%s]", strings.Replace(strings.Replace(subapi.Path, "{", "\\{", -1), "}", "\\}", -1), op.HttpMethod)
+				operationString := fmt.Sprintf("%s (%s)", strings.Replace(strings.Replace(subapi.Path, "{", "\\{", -1), "}", "\\}", -1), op.HttpMethod)
 				buf.WriteString(markup.anchor(op.Nickname))
 				buf.WriteString(markup.sectionHeader(4, "API: "+operationString))
 				buf.WriteString("\n\n" + op.Summary + "\n\n\n")
 
 				if len(op.Parameters) > 0 {
 					buf.WriteString(markup.tableHeader(""))
-					buf.WriteString(markup.tableRow("Param Name", "Param Type", "Data Type", "Description", "Required?"))
+					buf.WriteString(markup.tableHeaderRow("Param Name", "Param Type", "Data Type", "Description", "Required?"))
 					for _, param := range op.Parameters {
 						isRequired := ""
 						if param.Required {
@@ -184,7 +184,7 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 
 				if len(op.ResponseMessages) > 0 {
 					buf.WriteString(markup.tableHeader(""))
-					buf.WriteString(markup.tableRow("Code", "Message", "Model"))
+					buf.WriteString(markup.tableHeaderRow("Code", "Message", "Model"))
 					for _, msg := range op.ResponseMessages {
 						shortName := shortModelName(msg.ResponseModel)
 						modelText := shortName
@@ -210,7 +210,7 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 			buf.WriteString(markup.anchor(modelKey))
 			buf.WriteString(markup.sectionHeader(4, shortModelName(modelKey)))
 			buf.WriteString(markup.tableHeader(""))
-			buf.WriteString(markup.tableRow("Field Name", "Field Type", "Description"))
+			buf.WriteString(markup.tableHeaderRow("Field Name", "Field Type", "Description"))
 			for fieldName, fieldProps := range model.Properties {
 				buf.WriteString(markup.tableRow(fieldName, fieldProps.Type, fieldProps.Description))
 			}
@@ -299,9 +299,13 @@ func main() {
 		generateMarkup(parser, markupAsciiDoc, ".adoc")
 		log.Println("AsciiDoc file generated")
 	case "markdown":
-		// markupMarkdown := new(MarkupMarkdown)
-		// generateMarkup(parser, markupMarkdown, ".md")
-		// log.Println("Markdown file generated")
+		markupMarkDown := new(MarkupMarkDown)
+		generateMarkup(parser, markupMarkDown, ".md")
+		log.Println("MarkDown file generated")
+	case "confluence":
+		markupConfluence := new(MarkupConfluence)
+		generateMarkup(parser, markupConfluence, ".confluence")
+		log.Println("Confluence file generated")
 	case "swagger":
 		generateSwaggerUiFiles(parser)
 		log.Println("Swagger UI files generated")

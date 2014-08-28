@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 type MarkupAsciiDoc struct {
@@ -14,17 +15,17 @@ func (this *MarkupAsciiDoc) anchor(anchorName string) string {
 
 // sectionHeader renders a title (level 1) or subtitle (level 2..5)
 func (this *MarkupAsciiDoc) sectionHeader(level int, text string) string {
-	return fmt.Sprintf("%s %s\n", "====="[0:level], text)
+	return fmt.Sprintf("%s %s\n", strings.Repeat("=", level), text)
 }
 
 // bullet renders a bulleted item at the given level
 func (this *MarkupAsciiDoc) numberedItem(level int, text string) string {
-	return fmt.Sprintf("%s %s\n", "....."[0:level], text)
+	return fmt.Sprintf("%s %s\n", strings.Repeat(".", level), text)
 }
 
 // bullet renders a bulleted item at the given level
 func (this *MarkupAsciiDoc) bulletedItem(level int, text string) string {
-	return fmt.Sprintf("%s %s\n", "*****"[0:level], text)
+	return fmt.Sprintf("%s %s\n", strings.Repeat("*", level), text)
 }
 
 // link renders the linkText as a link to the specified anchorName. If linktext is "", then anchorName is used as the linkText.
@@ -49,7 +50,16 @@ func (this *MarkupAsciiDoc) tableFooter() string {
 	return "|==========\n\n"
 }
 
-// tableRow issues a single table row (might be a header row)
+// tableRow issues a table header row
+func (this *MarkupAsciiDoc) tableHeaderRow(args ...string) string {
+	var retval string
+	for _, arg := range args {
+		retval += fmt.Sprintf("|%s ", arg)
+	}
+	return retval + "\n"
+}
+
+// tableRow issues a single table data row
 func (this *MarkupAsciiDoc) tableRow(args ...string) string {
 	var retval string
 	for _, arg := range args {
