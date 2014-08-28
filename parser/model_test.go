@@ -11,7 +11,8 @@ import (
 
 type ModelSuite struct {
 	suite.Suite
-	parser *parser.Parser
+	parser          *parser.Parser
+	knownModelNames map[string]bool
 }
 
 var initialisedParser *parser.Parser
@@ -24,6 +25,7 @@ func (suite *ModelSuite) SetupSuite() {
 		initialisedParser.ParseTypeDefinitions(ExamplePackageName)
 	}
 	suite.parser = initialisedParser
+	suite.knownModelNames = make(map[string]bool)
 }
 
 func (suite *ModelSuite) GetExampleModelDefinition(modelName string) *ast.TypeSpec {
@@ -52,7 +54,7 @@ func (suite *ModelSuite) TestTypeDefinitions() {
 
 func (suite *ModelSuite) TestInterfaceType() {
 	m := parser.NewModel(suite.parser)
-	err, innerModels := m.ParseModel("InterfaceType", ExamplePackageName)
+	err, innerModels := m.ParseModel("InterfaceType", ExamplePackageName, suite.knownModelNames)
 	assert.Nil(suite.T(), err, "Can not parse InterfaceType definition")
 	assert.Nil(suite.T(), innerModels, "Can not parse InterfaceType definition")
 
@@ -63,7 +65,7 @@ func (suite *ModelSuite) TestInterfaceType() {
 
 func (suite *ModelSuite) TestSimpleAlias() {
 	m := parser.NewModel(suite.parser)
-	err, innerModels := m.ParseModel("SimpleAlias", ExamplePackageName)
+	err, innerModels := m.ParseModel("SimpleAlias", ExamplePackageName, suite.knownModelNames)
 	assert.Nil(suite.T(), err, "Can not parse SimpleAlias definition")
 	assert.Nil(suite.T(), innerModels, "Can not parse SimpleAlias definition")
 
@@ -74,7 +76,7 @@ func (suite *ModelSuite) TestSimpleAlias() {
 
 func (suite *ModelSuite) TestSimpleStructure() {
 	m := parser.NewModel(suite.parser)
-	err, innerModels := m.ParseModel("SimpleStructure", ExamplePackageName)
+	err, innerModels := m.ParseModel("SimpleStructure", ExamplePackageName, suite.knownModelNames)
 	assert.Nil(suite.T(), err, "Can not parse SimpleStructure definition")
 	assert.Len(suite.T(), innerModels, 0, "Can not parse SimpleStructure definition")
 
@@ -85,7 +87,7 @@ func (suite *ModelSuite) TestSimpleStructure() {
 
 func (suite *ModelSuite) TestSimpleStructureWithAnnotations() {
 	m := parser.NewModel(suite.parser)
-	err, innerModels := m.ParseModel("SimpleStructureWithAnnotations", ExamplePackageName)
+	err, innerModels := m.ParseModel("SimpleStructureWithAnnotations", ExamplePackageName, suite.knownModelNames)
 	assert.Nil(suite.T(), err, "Can not parse SimpleStructureWithAnnotations definition")
 	assert.Len(suite.T(), innerModels, 0, "Can not parse SimpleStructureWithAnnotations definition")
 
@@ -99,7 +101,7 @@ func (suite *ModelSuite) TestSimpleStructureWithAnnotations() {
 
 func (suite *ModelSuite) TestStructureWithSlice() {
 	m := parser.NewModel(suite.parser)
-	err, innerModels := m.ParseModel("StructureWithSlice", ExamplePackageName)
+	err, innerModels := m.ParseModel("StructureWithSlice", ExamplePackageName, suite.knownModelNames)
 	assert.Nil(suite.T(), err, "Can not parse StructureWithSlice definition")
 	assert.Len(suite.T(), innerModels, 0, "Can not parse StructureWithSlice definition")
 
@@ -114,7 +116,7 @@ func (suite *ModelSuite) TestStructureWithSlice() {
 
 func (suite *ModelSuite) TestStructureWithEmbededStructure() {
 	m := parser.NewModel(suite.parser)
-	err, innerModels := m.ParseModel("StructureWithEmbededStructure", ExamplePackageName)
+	err, innerModels := m.ParseModel("StructureWithEmbededStructure", ExamplePackageName, suite.knownModelNames)
 	assert.Nil(suite.T(), err, "Can not parse StructureWithEmbededStructure definition")
 
 	assert.Len(suite.T(), innerModels, 0, "Can not parse StructureWithEmbededStructure definition (%#v)", innerModels)
@@ -130,7 +132,7 @@ func (suite *ModelSuite) TestStructureWithEmbededStructure() {
 
 func (suite *ModelSuite) TestStructureWithEmbededPointer() {
 	m := parser.NewModel(suite.parser)
-	err, innerModels := m.ParseModel("StructureWithEmbededPointer", ExamplePackageName)
+	err, innerModels := m.ParseModel("StructureWithEmbededPointer", ExamplePackageName, suite.knownModelNames)
 	assert.Nil(suite.T(), err, "Can not parse StructureWithEmbededPointer definition")
 
 	assert.Len(suite.T(), innerModels, 0, "Can not parse StructureWithEmbededPointer definition (%#v)", innerModels)
