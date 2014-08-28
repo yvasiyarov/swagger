@@ -191,13 +191,13 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 	response.Message = strings.Trim(matches[4], "\"")
 
 	typeName := ""
-	if matches[3] == "error" || IsBasicType(matches[3]) {
+	if IsBasicType(matches[3]) {
 		typeName = matches[3]
 	} else {
 		model := NewModel(operation.parser)
 		response.ResponseModel = matches[3]
 		knownModelNames := map[string]bool{}
-		if err, innerModels := model.ParseModel(response.ResponseModel, operation.parser.CurrentPackage, &knownModelNames); err != nil {
+		if err, innerModels := model.ParseModel(response.ResponseModel, operation.parser.CurrentPackage, knownModelNames); err != nil {
 			return err
 		} else {
 			typeName = model.Id
