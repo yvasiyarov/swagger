@@ -1,6 +1,6 @@
 // @APIVersion 1.0.0
-// @Title Swagger Example API
-// @Description Swagger Example API
+// @APITitle Swagger Example API
+// @APIDescription Swagger Example API
 // @Contact varyous@gmail.com
 // @TermsOfServiceUrl http://yvasiyarov.com/
 // @License BSD
