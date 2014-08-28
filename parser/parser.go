@@ -63,10 +63,10 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 				switch attribute {
 				case "@apiversion":
 					parser.Listing.ApiVersion = strings.TrimSpace(commentLine[len("@APIVersion"):])
-				case "@title":
-					parser.Listing.Infos.Title = strings.TrimSpace(commentLine[len("@Title"):])
-				case "@description":
-					parser.Listing.Infos.Description = strings.TrimSpace(commentLine[len("@Description"):])
+				case "@apititle":
+					parser.Listing.Infos.Title = strings.TrimSpace(commentLine[len("@ApiTitle"):])
+				case "@apidescription":
+					parser.Listing.Infos.Description = strings.TrimSpace(commentLine[len("@ApiDescription"):])
 				case "@termsofserviceurl":
 					parser.Listing.Infos.TermsOfServiceUrl = strings.TrimSpace(commentLine[len("@TermsOfServiceUrl"):])
 				case "@contact":
