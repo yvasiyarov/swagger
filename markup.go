@@ -138,16 +138,17 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 		buf.WriteString(markup.sectionHeader(3, "Models"))
 		buf.WriteString("\n")
 
-		for modelKey, model := range apiDescription.Models {
+		for _, modelKey := range alphabeticalKeysOfModels(apiDescription.Models) {
+			model := apiDescription.Models[modelKey]
 			buf.WriteString(markup.anchor(modelKey))
 			buf.WriteString(markup.sectionHeader(4, shortModelName(modelKey)))
 			buf.WriteString(markup.tableHeader(""))
-			buf.WriteString(markup.tableHeaderRow("Field Name", "Field Type", "Description"))
-			for fieldName, fieldProps := range model.Properties {
+			buf.WriteString(markup.tableHeaderRow("Field Name (alphabetical)", "Field Type", "Description"))
+			for _, fieldName := range alphabeticalKeysOfFields(model.Properties) {
+				fieldProps := model.Properties[fieldName]
 				buf.WriteString(markup.tableRow(fieldName, fieldProps.Type, fieldProps.Description))
 			}
 			buf.WriteString(markup.tableFooter())
-			buf.WriteString("\nNote: These fields are listed in random order (for now).\n")
 		}
 		buf.WriteString("\n")
 
@@ -168,6 +169,26 @@ func alphabeticalKeysOfSubApis(refs []*parser.ApiRef) ([]string, map[string]int)
 	return keys, index
 }
 func alphabeticalKeysOfApiDeclaration(m map[string]*parser.ApiDeclaration) []string {
+	keys := make([]string, len(m))
+	i := 0
+	for key, _ := range m {
+		keys[i] = key
+		i++
+	}
+	sort.Strings(keys)
+	return keys
+}
+func alphabeticalKeysOfModels(m map[string]*parser.Model) []string {
+	keys := make([]string, len(m))
+	i := 0
+	for key, _ := range m {
+		keys[i] = key
+		i++
+	}
+	sort.Strings(keys)
+	return keys
+}
+func alphabeticalKeysOfFields(m map[string]*parser.ModelProperty) []string {
 	keys := make([]string, len(m))
 	i := 0
 	for key, _ := range m {
