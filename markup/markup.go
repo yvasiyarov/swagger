@@ -1,4 +1,4 @@
-package main
+package markup
 
 import (
 	"bytes"
@@ -23,10 +23,10 @@ type Markup interface {
 	tableFooter() string
 }
 
-func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) {
+func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string) {
 	var filename string
 	if *outputSpec == "" {
-		filename = path.Join("./", "API", fileExtension)
+		filename = path.Join("./", "API", defaultFileExtension)
 	} else {
 		filename = path.Join(*outputSpec)
 	}
@@ -155,6 +155,11 @@ func generateMarkup(parser *parser.Parser, markup Markup, fileExtension string) 
 	}
 
 	fd.WriteString(buf.String())
+}
+
+func shortModelName(longModelName string) string {
+	parts := strings.Split(longModelName, ".")
+	return parts[len(parts)-1]
 }
 
 func alphabeticalKeysOfSubApis(refs []*parser.ApiRef) ([]string, map[string]int) {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/yvasiyarov/swagger/markup"
 	"github.com/yvasiyarov/swagger/parser"
 	"go/ast"
 	"log"
@@ -66,11 +67,6 @@ func generateSwaggerDocs(parser *parser.Parser) {
 	doc = strings.Replace(doc, "{{apiDescriptions}}", "map[string]string{"+apiDescriptions.String()+"}", -1)
 
 	fd.WriteString(doc)
-}
-
-func shortModelName(longModelName string) string {
-	parts := strings.Split(longModelName, ".")
-	return parts[len(parts)-1]
 }
 
 func generateSwaggerUiFiles(parser *parser.Parser) {
@@ -139,16 +135,13 @@ func main() {
 		generateSwaggerDocs(parser)
 		log.Println("Doc file generated")
 	case "asciidoc":
-		markupAsciiDoc := new(MarkupAsciiDoc)
-		generateMarkup(parser, markupAsciiDoc, ".adoc")
+		markup.GenerateMarkup(parser, new(markup.MarkupAsciiDoc), outputSpec, ".adoc")
 		log.Println("AsciiDoc file generated")
 	case "markdown":
-		markupMarkDown := new(MarkupMarkDown)
-		generateMarkup(parser, markupMarkDown, ".md")
+		markup.GenerateMarkup(parser, new(markup.MarkupMarkDown), outputSpec, ".md")
 		log.Println("MarkDown file generated")
 	case "confluence":
-		markupConfluence := new(MarkupConfluence)
-		generateMarkup(parser, markupConfluence, ".confluence")
+		markup.GenerateMarkup(parser, new(markup.MarkupConfluence), outputSpec, ".confluence")
 		log.Println("Confluence file generated")
 	case "swagger":
 		generateSwaggerUiFiles(parser)
