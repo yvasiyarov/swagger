@@ -97,16 +97,28 @@ Let's discuss every line in detail:
 Quick Start Guide
 -----------------
 
-1. Add comments to your API
-2. Change IsController function in generator.go. It should return true if provided function declaration is "controller"
+1. Add comments to your API source code.
+2. Change the IsController function in generator.go to recognize your controller methods. The default is to return true if the provided function declaration is attached to an object (receiver) that has "controller" in the name. When in doubt, just have IsController always return true and then the generator will acknowledge any attribute comments it finds above any and all methods.
 3. Run generator API:
   `go run generator.go -apiPackage="my_cool_api" -mainApiFile="my_cool_api/web/main.go" -basePath="http://127.0.0.1:3000"`
     * apiPackage  - package with API controllers implementation
     * mainApiFile - main API file. We will look for "General API info" in this file. If the mainApiFile command-line switch is left blank, then main.go is assumed (in the location specified by apiPackage).
     * basePath    - Your API URL. Test requests will be sent to this URL
-    * swaggerUiPath - Optional output path (and format) for the generated data. See below.
-  If swaggerUiPath is blank, then the default behavior is to generate a "docs.go" file in the current directory. This one file contains all of the documentation for all of the sub-Api's. It is used in conjunction with the provided web.go (see step 4), which calls SwaggerUI internally.
-  If swaggerUiPath is non-blank, then it must specify a path in which the output should be saved (your SwaggerUI "data" folder). In this case, the documentation will be saved as individual JSON files, rather than in a single docs.go file. First, the overall API info will be saved as index.json in the root of the specified swaggerUiPath. Then, the API specification for each sub-api will be saved as index.json in a sub-folder that matches the sub-api (resource) name. This is all consistent with using a "data" folder with SwaggerUI "out of the box".
+    * format      - One of: go|swagger|asciidoc|markdown|confluence. See below.
+    * output      - Output specification. See below.
+
+    For -format=swagger, -output is the root path in which
+
+    If -format=go (the default), then this will generate a "docs.go" file in the folder specified by -output (the current directory is the default). This one file contains all of the documentation for all of the sub-Api's. It is used in conjunction with the provided web.go (see step 4), which calls SwaggerUI internally.
+
+    If -format=swagger, then -output must specify a path in which the output should be saved (your SwaggerUI "data" folder). In this case, the documentation will be saved as individual JSON files, rather than in a single docs.go file. First, the overall API info will be saved as index.json in the root of the specified swaggerUiPath. Then, the API specification for each sub-api will be saved as index.json in a sub-folder that matches the sub-api (resource) name. This is all consistent with using a "data" folder with SwaggerUI "out of the box".
+
+    If -format=markdown, then a the API documentation will be saved in a single file using MarkDown syntax. Use -output to specify the fully qualified filename for the MarkDown file. (The default is API.md in the current directory).
+
+    If -format=asciidoc, then a the API documentation will be saved in a single file using AsciiDoc syntax. Use -output to specify the fully qualified filename for the AsciiDoc file. (The default is API.adoc in the current directory).
+
+    If -format=confluence, then a the API documentation will be saved in a single file using Atlassian's Confluence wiki syntax. Use -output to specify the fully qualified filename for the MarkDown file. (The default is API.confluence in the current directory).
+
 4. To run the generated swagger UI (assuming you left swaggerUiPath blank), copy/move the generated docs.go file to the same folder as web.go. Then:
  `go run web.go docs.go`
 5. Enjoy it :-)
