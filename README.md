@@ -119,8 +119,10 @@ Quick Start Guide
 
     If -format="confluence", then a the API documentation will be saved in a single file using Atlassian's Confluence wiki syntax. Use -output to specify the fully qualified filename for the MarkDown file. (The default is API.confluence in the current directory).
 
-4. To run the generated swagger UI (assuming you left swaggerUiPath blank), copy/move the generated docs.go file to the same folder as web.go. Then:
- `go run web.go docs.go`
+4. To run the generated swagger UI (assuming you used -format="go"), copy/move the generated docs.go file to the same folder as web.go. Then:
+
+    `go run web.go docs.go`
+
 5. Enjoy it :-)
 
 
