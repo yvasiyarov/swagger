@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"log"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -115,10 +116,15 @@ func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 	typeAsString := property.GetTypeAsString(field.Type)
 	//log.Printf("Get type as string %s \n", typeAsString)
 
+	// Sometimes reflection reports an object as "&{foo Bar}" rather than just "foo.Bar"
+	// The next 2 lines of code normalize them to foo.Bar
+	reInternalRepresentation := regexp.MustCompile("&\\{(\\w*) (\\w*)\\}")
+	typeAsString = string(reInternalRepresentation.ReplaceAll([]byte(typeAsString), []byte("$1.$2")))
+
 	if strings.HasPrefix(typeAsString, "[]") {
 		property.Type = "array"
 		property.SetItemType(typeAsString[2:])
-	} else if typeAsString == "&{time Time}" {
+	} else if typeAsString == "time.Time" {
 		property.Type = "Time"
 	} else {
 		property.Type = typeAsString
