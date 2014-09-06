@@ -180,6 +180,10 @@ func (m *Model) ParseModelProperty(field *ast.Field, modelPackage string) {
 			if v == "required" {
 				isRequired = true
 			}
+			// We will not document at all any fields with a json tag of "-"
+			if v == "-" {
+				return
+			}
 		}
 		if required := structTag.Get("required"); required != "" || isRequired {
 			m.Required = append(m.Required, name)

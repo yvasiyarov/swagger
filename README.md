@@ -50,7 +50,7 @@ These @SubApi comments should also be placed above the "package" keyword of the 
 URI must have leading slash. The description is not mandatory, but if you forget it, then you will have an ugly looking document. :-)
 
 
-### API Operation
+### 3. API Operation
 
 The most important annotation comments for swagger UI generation are these comments that describe an operation (GET, PUT, POST, etc.). These comments are placed within your controller source code. One full set of these comments is used for each operation. They are placed just above the code that handles that operation.
 
@@ -93,6 +93,25 @@ Let's discuss every line in detail:
 * @Resource - Forces the resource identifier to be something other than the first segment of the route URI. For example, if "@Resource /payment" is specified together with "@Router /invoice/{id}/payments [get]" then this operation will be part of the "payment" sub-api, rather than the "invoice" sub-api. This is also good for when the @Router specifies a path in which the first segment is almost correct, but not quite, e.g. /payments (plural) vs. /payment (singular). It has the following format:
 @Resource resource_name
  * resource_name - A leading slash in the name in the @Resource annotation is optional. So, "@Resource /payment" and "@Resource payment" are the same.
+
+### 4. Struct Tags
+
+    type Actor struct {
+        Id            *string   `required json:"id"`
+        FirstName     *string   `json:"firstName,required" description:"The actor's first/middle name(s)"`
+        LastName      *string   `json:"lastName,required" description:"The actor's last name (sorted by)"`
+        HeadshotImage *string   `json:"-"`
+        Filmography   []Film    `json:"filmography,omitempty"`
+        Contact       *Contact  `json:"contact,omitempty"`
+    }
+
+* If a `required` struct tag is found, then the field is marked as required, e.g. `Id`, above.
+* If `required` is found within a `json` struct tag, then the field is marked as required, e.g. `FirstName`, above.
+* If a `description` struct tag is found, then it provides the field's description, e.g. `FirstName`, above.
+* If `-` is found within a `json` struct tag, then the field is ignored (not documented), e.g. `HeadshotImage`, above.
+
+Note: Use a space to separate multiple struct tags.
+
 
 Quick Start Guide
 -----------------
