@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 )
 
@@ -23,6 +24,7 @@ var mainApiFile = flag.String("mainApiFile", "", "The file that contains the gen
 var basePath = flag.String("basePath", "http://127.0.0.1:3000", "Web service base path")
 var outputFormat = flag.String("format", "go", "Output format type for the generated files: "+AVAILABLE_FORMATS)
 var outputSpec = flag.String("output", "", "Output (path) for the generated file(s)")
+var controllerClass = flag.String("controllerClass", "", "Speed up parsing by specifying which receiver objects have the controller methods")
 
 var generatedFileTemplate = `
 package main
@@ -34,10 +36,18 @@ var apiDescriptionsJson = {{apiDescriptions}}
 
 // It must return true if funcDeclaration is controller. We will try to parse only comments before controllers
 func IsController(funcDeclaration *ast.FuncDecl) bool {
+	if len(*controllerClass) == 0 {
+		// Search every method
+		return true
+	}
 	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
 		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
 			receiverName := fmt.Sprint(starExpression.X)
-			return strings.Index(receiverName, "Context") != -1 || strings.Index(receiverName, "Controller") != -1
+			matched, err := regexp.MatchString(string(*controllerClass), receiverName)
+			if err != nil {
+				log.Fatalf("The -controllerClass argument is not a valid regular expression: %v\n", err)
+			}
+			return matched
 		}
 	}
 	return false
