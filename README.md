@@ -117,8 +117,7 @@ Quick Start Guide
 -----------------
 
 1. Add comments to your API source code.
-2. Change the IsController function in generator.go to recognize your controller methods. The default is to return true if the provided function declaration is attached to an object (receiver) that has "controller" in the name. When in doubt, just have IsController always return true and then the generator will acknowledge any attribute comments it finds above any and all methods.
-3. Run generator API:
+2. Run generator API:
     `go run generator.go -apiPackage="my_cool_api" -mainApiFile="my_cool_api/web/main.go" -basePath="http://127.0.0.1:3000"`
 
     Command line switches are:
@@ -127,6 +126,7 @@ Quick Start Guide
     * -basePath    - Your API URL. Test requests will be sent to this URL
     * -format      - One of: go|swagger|asciidoc|markdown|confluence. Default is -format="go". See below.
     * -output      - Output specification. Default varies according to -format. See below.
+    * -controllerClass - Speed up parsing by specifying which receiver objects have the controller methods. The default is to search all methods. The argument can be a regular expression. For example, `-controllerClass="(Context|Controller)$"` means the receiver name must end in Context or Controller.
 
     If -format="go" (the default), then this will generate a "docs.go" file in the folder specified by -output (the current directory is the default). This one file contains all of the documentation for all of the sub-Api's. It is used in conjunction with the provided web.go (see step 4), which calls SwaggerUI internally.
 
@@ -138,11 +138,11 @@ Quick Start Guide
 
     If -format="confluence", then a the API documentation will be saved in a single file using Atlassian's Confluence wiki syntax. Use -output to specify the fully qualified filename for the MarkDown file. (The default is API.confluence in the current directory).
 
-4. To run the generated swagger UI (assuming you used -format="go"), copy/move the generated docs.go file to the same folder as web.go. Then:
+3. To run the generated swagger UI (assuming you used -format="go"), copy/move the generated docs.go file to the same folder as web.go. Then:
 
     `go run web.go docs.go`
 
-5. Enjoy it :-)
+4. Enjoy it :-)
 
 
 TODO
