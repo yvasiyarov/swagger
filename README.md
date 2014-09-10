@@ -128,7 +128,7 @@ Quick Start Guide
     * -format      - One of: go|swagger|asciidoc|markdown|confluence. Default is -format="go". See below.
     * -output      - Output specification. Default varies according to -format. See below.
 
-    If -format="go" (the default), then this will generate a "docs.go" file in the folder specified by -output (the current directory is the default). This one file contains all of the documentation for all of the sub-Api's. It is used in conjunction with the provided web.go (see step 4), which calls SwaggerUI internally.
+    If -format="go" (the default), then this will generate a "docs.go" file in the folder specified by -output (the current directory is the default). This one file contains all of the documentation for all of the sub-Api's. It is used in conjunction with the provided web.go-example (see step 4), which calls SwaggerUI internally.
 
     If -format="swagger", then -output must specify a path in which the output should be saved (your SwaggerUI "data" folder). In this case, the documentation will be saved as individual JSON files, rather than in a single docs.go file. First, the overall API info will be saved as index.json in the root of the specified swaggerUiPath. Then, the API specification for each sub-api will be saved as index.json in a sub-folder that matches the sub-api (resource) name. This is all consistent with using a "data" folder with SwaggerUI "out of the box".
 
@@ -138,7 +138,7 @@ Quick Start Guide
 
     If -format="confluence", then a the API documentation will be saved in a single file using Atlassian's Confluence wiki syntax. Use -output to specify the fully qualified filename for the MarkDown file. (The default is API.confluence in the current directory).
 
-4. To run the generated swagger UI (assuming you used -format="go"), copy/move the generated docs.go file to the same folder as web.go. Then:
+4. To run the generated swagger UI (assuming you used -format="go"), copy/move the generated docs.go file to a new folder under GOPATH/src. Also bring in the web.go-example file, renaming it to web.go. Then:
 
     `go run web.go docs.go`
 
