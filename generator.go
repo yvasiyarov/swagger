@@ -135,7 +135,24 @@ func main() {
 	}
 
 	log.Println("Start parsing")
-	parser.ParseGeneralApiInfo(path.Join(gopath, "src", *mainApiFile))
+	//Look for every directory in the GOPATH
+
+	goPathDirs := strings.Split(gopath, ":")
+
+	var foundMainFile string = ""
+	for _, dir := range goPathDirs {
+		fullPath := path.Join(dir, "src", *mainApiFile)
+		if _, err := os.Stat(fullPath); !os.IsNotExist(err) {
+			foundMainFile = fullPath
+			break
+		}
+
+	}
+
+	if foundMainFile == "" {
+		log.Fatalf("Could not find %s in $GOPATH", *mainApiFile)
+	}
+	parser.ParseGeneralApiInfo(foundMainFile)
 	parser.ParseApi(*apiPackage)
 	log.Println("Finish parsing")
 
