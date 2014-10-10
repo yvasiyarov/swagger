@@ -406,7 +406,7 @@ func (parser *Parser) ParseSubApiDescription(commentLine string) {
 }
 
 func IsIgnoredPackage(packageName string) bool {
-	return packageName == "C" || packageName == "appengine/cloudsql"
+	return packageName == "C" || packageName == "appengine/cloudsql" || packageName == "appengine/datastore"
 }
 
 func ParserFileFilter(info os.FileInfo) bool {

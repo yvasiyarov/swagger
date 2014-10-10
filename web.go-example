@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var host = flag.String("host", "127.0.0.1", "Host")
+var host = flag.String("host", "0.0.0.0", "Host")
 var port = flag.String("port", "8080", "Port")
 var staticContent = flag.String("staticPath", "./swagger-ui", "Path to folder with Swagger UI")
 
