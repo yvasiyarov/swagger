@@ -109,6 +109,28 @@ func (operation *Operation) getUniqueModels() []*Model {
 	return uniqueModels
 }
 
+func (operation *Operation) registerType(typeName string) (string, error) {
+	registerType := ""
+
+	if IsBasicType(typeName) {
+		registerType = typeName
+	} else {
+		model := NewModel(operation.parser)
+		knownModelNames := map[string]bool{}
+
+		if err, innerModels := model.ParseModel(typeName, operation.parser.CurrentPackage, knownModelNames); err != nil {
+			return registerType, err
+		} else {
+			registerType = model.Id
+
+			operation.Models = append(operation.Models, model)
+			operation.Models = append(operation.Models, innerModels...)
+		}
+	}
+
+	return registerType, nil
+}
+
 // Parse params return []string of param properties
 // @Param	queryText		form	      string	  true		        "The email for login"
 // 			[param name]    [param type] [data type]  [is mandatory?]   [Comment]
@@ -121,11 +143,15 @@ func (operation *Operation) ParseParamComment(commentLine string) error {
 	if matches := re.FindStringSubmatch(paramString); len(matches) != 6 {
 		return fmt.Errorf("Can not parse param comment \"%s\", skipped.", paramString)
 	} else {
-		//TODO: if type is not simple, then add to Models[]
+		typeName, err := operation.registerType(matches[3])
+		if err != nil {
+			return err
+		}
+
 		swaggerParameter.Name = matches[1]
 		swaggerParameter.ParamType = matches[2]
-		swaggerParameter.Type = matches[3]
-		swaggerParameter.DataType = matches[3]
+		swaggerParameter.Type = typeName
+		swaggerParameter.DataType = typeName
 		swaggerParameter.Required = strings.ToLower(matches[4]) == "true"
 		swaggerParameter.Description = matches[5]
 
@@ -190,21 +216,9 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 	}
 	response.Message = strings.Trim(matches[4], "\"")
 
-	typeName := ""
-	if IsBasicType(matches[3]) {
-		typeName = matches[3]
-	} else {
-		model := NewModel(operation.parser)
-		response.ResponseModel = matches[3]
-		knownModelNames := map[string]bool{}
-		if err, innerModels := model.ParseModel(response.ResponseModel, operation.parser.CurrentPackage, knownModelNames); err != nil {
-			return err
-		} else {
-			typeName = model.Id
-
-			operation.Models = append(operation.Models, model)
-			operation.Models = append(operation.Models, innerModels...)
-		}
+	typeName, err := operation.registerType(matches[3])
+	if err != nil {
+		return err
 	}
 
 	response.ResponseModel = typeName
