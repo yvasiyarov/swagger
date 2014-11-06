@@ -54,7 +54,7 @@ func IsController(funcDeclaration *ast.FuncDecl) bool {
 }
 
 func generateSwaggerDocs(parser *parser.Parser) {
-	fd, err := os.Create(path.Join("./", "docs.go"))
+	fd, err := os.Create(path.Join(*outputSpec, "docs.go"))
 	if err != nil {
 		log.Fatalf("Can not create document file: %v\n", err)
 	}

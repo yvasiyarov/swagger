@@ -20,7 +20,7 @@ type Parser struct {
 	CurrentPackage                    string
 	TypeDefinitions                   map[string]map[string]*ast.TypeSpec
 	PackagePathCache                  map[string]string
-	PackageImports                    map[string]map[string]string
+	PackageImports                    map[string]map[string][]string
 	BasePath                          string
 	IsController                      func(*ast.FuncDecl) bool
 	TypesImplementingMarshalInterface map[string]string
@@ -36,7 +36,7 @@ func NewParser() *Parser {
 		TopLevelApis:                      make(map[string]*ApiDeclaration),
 		TypeDefinitions:                   make(map[string]map[string]*ast.TypeSpec),
 		PackagePathCache:                  make(map[string]string),
-		PackageImports:                    make(map[string]map[string]string),
+		PackageImports:                    make(map[string]map[string][]string),
 		TypesImplementingMarshalInterface: make(map[string]string),
 	}
 }
@@ -273,7 +273,7 @@ func (parser *Parser) ParseImportStatements(packageName string) map[string]bool 
 	imports := make(map[string]bool)
 	astPackages := parser.GetPackageAst(pkgRealPath)
 
-	parser.PackageImports[pkgRealPath] = make(map[string]string)
+	parser.PackageImports[pkgRealPath] = make(map[string][]string)
 	for _, astPackage := range astPackages {
 		for _, astFile := range astPackage.Files {
 			for _, astImport := range astFile.Imports {
@@ -286,8 +286,24 @@ func (parser *Parser) ParseImportStatements(packageName string) map[string]bool 
 						//log.Printf("Parse %s, Add new import definition:%s\n", packageName, astImport.Path.Value)
 					}
 
-					importPath := strings.Split(importedPackageName, "/")
-					parser.PackageImports[pkgRealPath][importPath[len(importPath)-1]] = importedPackageName
+					var importedPackageAlias string
+					if astImport.Name != nil && astImport.Name.Name != "." && astImport.Name.Name != "_" {
+						importedPackageAlias = astImport.Name.Name
+					} else {
+						importPath := strings.Split(importedPackageName, "/")
+						importedPackageAlias = importPath[len(importPath)-1]
+					}
+
+					isExists := false
+					for _, v := range parser.PackageImports[pkgRealPath][importedPackageAlias] {
+						if v == importedPackageName {
+							isExists = true
+						}
+					}
+
+					if !isExists {
+						parser.PackageImports[pkgRealPath][importedPackageAlias] = append(parser.PackageImports[pkgRealPath][importedPackageAlias], importedPackageName)
+					}
 				}
 			}
 		}
@@ -340,10 +356,21 @@ func (parser *Parser) FindModelDefinition(modelName string, currentPackage strin
 				log.Fatalf("Can not find definition of %s model. Package %s dont import anything", modelNameFromPath, pkgRealPath)
 			} else if relativePackage, ok := imports[modelNameParts[0]]; !ok {
 				log.Fatalf("Package %s is not imported to %s, Imported: %#v\n", modelNameParts[0], currentPackage, imports)
-			} else if model = parser.GetModelDefinition(modelNameFromPath, relativePackage); model == nil {
-				log.Fatalf("Can not find definition of %s model in package %s", modelNameFromPath, relativePackage)
 			} else {
-				modelPackage = relativePackage
+				var modelFound bool
+
+				for _, packageName := range relativePackage {
+					if model = parser.GetModelDefinition(modelNameFromPath, packageName); model != nil {
+						modelPackage = packageName
+						modelFound = true
+
+						break
+					}
+				}
+
+				if !modelFound {
+					log.Fatalf("Can not find definition of %s model in package %s", modelNameFromPath, relativePackage)
+				}
 			}
 		}
 	}
