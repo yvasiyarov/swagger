@@ -33,7 +33,9 @@ func (m *Model) ParseModel(modelName string, currentPackage string, knownModelNa
 	m.Id = strings.Join(append(strings.Split(modelPackage, "/"), modelNameParts[len(modelNameParts)-1]), ".")
 
 	var innerModelList []*Model
-	if astStructType, ok := astTypeSpec.Type.(*ast.StructType); ok {
+	if astTypeDef, ok := astTypeSpec.Type.(*ast.Ident); ok {
+		typeDefTranslations[astTypeSpec.Name.String()] = astTypeDef.Name
+	} else if astStructType, ok := astTypeSpec.Type.(*ast.StructType); ok {
 		m.ParseFieldList(astStructType.Fields.List, modelPackage)
 		usedTypes := make(map[string]bool)
 
@@ -45,6 +47,9 @@ func (m *Model) ParseModel(modelName string, currentPackage string, knownModelNa
 				} else {
 					typeName = property.Items.Ref
 				}
+			}
+			if translation, ok := typeDefTranslations[typeName]; ok {
+				typeName = translation
 			}
 			if IsBasicType(typeName) || m.parser.IsImplementMarshalInterface(typeName) {
 				continue
@@ -240,6 +245,8 @@ var basicTypes = map[string]bool{
 	"error":      true,
 	"Time":       true,
 }
+
+var typeDefTranslations = map[string]string{}
 
 func IsBasicType(typeName string) bool {
 	_, ok := basicTypes[typeName]
