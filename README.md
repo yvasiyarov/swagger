@@ -7,7 +7,7 @@ This tool was inspired by [Beego](http://beego.me/docs/advantage/docs.md), and f
 
 Project Status
 --------------
-This project is in an early-adopter, "Alpha," state. If you find a bug and think you know what the fix should be, please send pull request. If you want to help, please see list of TODO's at the end of this README.
+This project is in an early-adopter, "Alpha," state. If you find a bug, please report it on GitHub (https://github.com/yvasiyarov/swagger/issues). If you also think you know what the fix should be, please submit a pull request to go with it.
 
 
 Declarative Comments Format
@@ -116,9 +116,17 @@ Note: Use a space to separate multiple struct tags.
 Quick Start Guide
 -----------------
 
-1. Add comments to your API source code.
-2. Run generator API:
-    `go run generator.go -apiPackage="my_cool_api" -mainApiFile="my_cool_api/web/main.go" -basePath="http://127.0.0.1:3000"`
+1. Add comments to your API source code, as described above.
+
+2. Compile the Swagger generator.
+    `go install`
+
+    This will create a binary in your $GOPATH/bin folder called swagger (Mac/Unix) or swagger.exe (Windows).
+
+3. Run the Swagger generator.
+    Be in the folder with your annotated API source code and run the swagger binary:
+
+    `./$GOPATH/bin/swagger -apiPackage="my_cool_api" -mainApiFile="my_cool_api/web/main.go" -basePath="http://127.0.0.1:3000"`
 
     Command line switches are:
     * -apiPackage  - package with API controllers implementation
@@ -138,17 +146,19 @@ Quick Start Guide
 
     If -format="confluence", then a the API documentation will be saved in a single file using Atlassian's Confluence wiki syntax. Use -output to specify the fully qualified filename for the MarkDown file. (The default is API.confluence in the current directory).
 
-3. To run the generated swagger UI (assuming you used -format="go"), copy/move the generated docs.go file to a new folder under GOPATH/src. Also bring in the web.go-example file, renaming it to web.go. Then:
+4. To run the generated swagger UI (assuming you used -format="go"), copy/move the generated docs.go file to a new folder under GOPATH/src. Also bring in the web.go-example file, renaming it to web.go. Then:
 
     `go run web.go docs.go`
 
-4. Enjoy it :-)
+5. Enjoy it :-)
 
 
-TODO
-----
+Documentation TODO's
+--------------------
 
-1. Write better documentation.
+(For programmatic TODO's, see https://github.com/yvasiyarov/swagger/issues)
+
+1. This README is getting long in the tooth. We should section it out and leave the README as just an index and quick start.
 2. Document the data structures and methods used.
 3. Implement an example API.
 
@@ -159,3 +169,7 @@ Known Limitations
 * Types that implement the Marshaler/Unmarshaler interface. Marshaling of this types will produce unpredictable JSON (at parse-time).
 
 
+Technical Notes
+---------------
+
+* Taking advantage of type aliasing (`type foo string`) used to cause empty structs to show up in the model sections. Type aliases are now substituted for the underlying type immediately as they are encountered as if the code (or annotation) referred to the underlying type all along.
