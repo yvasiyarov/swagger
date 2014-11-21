@@ -135,7 +135,23 @@ func main() {
 	}
 
 	log.Println("Start parsing")
-	parser.ParseGeneralApiInfo(path.Join(gopath, "src", *mainApiFile))
+
+	//Support gopaths with multiple directories
+	dirs := strings.Split(gopath, ":")
+	found := false
+	for _, d := range dirs {
+		apifile := path.Join(d, "src", *mainApiFile)
+		if _, err := os.Stat(apifile); err == nil {
+			parser.ParseGeneralApiInfo(apifile)
+			found = true
+		}
+	}
+	if found == false {
+		apifile := path.Join(gopath, "src", *mainApiFile)
+		f, _ := fmt.Printf("Could not find apifile %s to parse\n", apifile)
+		panic(f)
+	}
+
 	parser.ParseApi(*apiPackage)
 	log.Println("Finish parsing")
 
