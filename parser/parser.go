@@ -182,7 +182,15 @@ func (parser *Parser) AddOperation(op *Operation) {
 		api.BasePath = parser.BasePath
 
 		parser.TopLevelApis[resource] = api
+	}
 
+	found := false
+	for _, apiRef := range parser.Listing.Apis {
+		if apiRef.Path == api.ResourcePath {
+			found = true
+		}
+	}
+	if !found {
 		apiRef := &ApiRef{
 			Path:        api.ResourcePath,
 			Description: op.Summary,
@@ -424,10 +432,18 @@ func (parser *Parser) ParseSubApiDescription(commentLine string) {
 	if matches := re.FindStringSubmatch(commentLine); len(matches) != 3 {
 		log.Printf("Can not parse sub api description %s, skipped", commentLine)
 	} else {
+		found := false
 		for _, ref := range parser.Listing.Apis {
 			if ref.Path == matches[2] {
+				found = true
 				ref.Description = strings.TrimSpace(matches[1])
 			}
+		}
+		if !found {
+			subApi := &ApiRef{Path: matches[2],
+				Description: strings.TrimSpace(matches[1]),
+			}
+			parser.Listing.Apis = append(parser.Listing.Apis, subApi)
 		}
 	}
 }
