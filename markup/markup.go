@@ -109,7 +109,7 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 						if param.Required {
 							isRequired = "Yes"
 						}
-						buf.WriteString(markup.tableRow(param.Name, param.ParamType, param.DataType, param.Description, isRequired))
+						buf.WriteString(markup.tableRow(param.Name, param.ParamType, modelText(markup, param.DataType), param.Description, isRequired))
 					}
 					buf.WriteString(markup.tableFooter())
 				}
@@ -118,12 +118,7 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 					buf.WriteString(markup.tableHeader(""))
 					buf.WriteString(markup.tableHeaderRow("Code", "Message", "Model"))
 					for _, msg := range op.ResponseMessages {
-						shortName := shortModelName(msg.ResponseModel)
-						modelText := shortName
-						if msg.ResponseModel != shortName {
-							modelText = markup.link(msg.ResponseModel, shortName)
-						}
-						buf.WriteString(markup.tableRow(fmt.Sprintf("%v", msg.Code), msg.Message, modelText))
+						buf.WriteString(markup.tableRow(fmt.Sprintf("%v", msg.Code), msg.Message, modelText(markup, msg.ResponseModel)))
 					}
 					buf.WriteString(markup.tableFooter())
 				}
@@ -160,6 +155,15 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 func shortModelName(longModelName string) string {
 	parts := strings.Split(longModelName, ".")
 	return parts[len(parts)-1]
+}
+
+func modelText(markup Markup, fullyQualifiedModelName string) string {
+	shortName := shortModelName(fullyQualifiedModelName)
+	result := shortName
+	if fullyQualifiedModelName != shortName {
+		result = markup.link(fullyQualifiedModelName, shortName)
+	}
+	return result
 }
 
 func alphabeticalKeysOfSubApis(refs []*parser.ApiRef) ([]string, map[string]int) {
