@@ -112,14 +112,20 @@ func (operation *Operation) getUniqueModels() []*Model {
 func (operation *Operation) registerType(typeName string) (string, error) {
 	registerType := ""
 
-	if IsBasicType(typeName) {
+	if translation, ok := typeDefTranslations[typeName]; ok {
+		registerType = translation
+	} else if IsBasicType(typeName) {
 		registerType = typeName
 	} else {
 		model := NewModel(operation.parser)
 		knownModelNames := map[string]bool{}
 
-		if err, innerModels := model.ParseModel(typeName, operation.parser.CurrentPackage, knownModelNames); err != nil {
+		err, innerModels := model.ParseModel(typeName, operation.parser.CurrentPackage, knownModelNames)
+		if err != nil {
 			return registerType, err
+		}
+		if translation, ok := typeDefTranslations[typeName]; ok {
+			registerType = translation
 		} else {
 			registerType = model.Id
 
