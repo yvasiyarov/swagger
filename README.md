@@ -88,7 +88,7 @@ Let's discuss every line in detail:
  * response_description - optional. It usually only makes sense for error responses.
 * @Router - define route path, which should be used to call this API operation. It has the following format:
  @Router request_path [request_method]
- * reqiest_path which should be used by to make request to this API endpoint. It can include placeholders for parameters with transport type equal "path". Look at the example above.
+ * request_path which should be used by to make request to this API endpoint. It can include placeholders for parameters with transport type equal "path". Look at the example above.
  * request_method - just HTTP request method (get/post/etc..)
 * @Resource - Forces the resource identifier to be something other than the first segment of the route URI. For example, if "@Resource /payment" is specified together with "@Router /invoice/{id}/payments [get]" then this operation will be part of the "payment" sub-api, rather than the "invoice" sub-api. This is also good for when the @Router specifies a path in which the first segment is almost correct, but not quite, e.g. /payments (plural) vs. /payment (singular). It has the following format:
 @Resource resource_name
