@@ -67,3 +67,7 @@ func (this *MarkupAsciiDoc) tableRow(args ...string) string {
 	}
 	return retval + "\n"
 }
+
+func (this *MarkupAsciiDoc) colorSpan(content, foregroundColor, backgroundColor string) string {
+	return fmt.Sprintf("[%s,%s-background]#%s#", foregroundColor, backgroundColor, content)
+}

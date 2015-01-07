@@ -11,6 +11,19 @@ import (
 	"strings"
 )
 
+const (
+	color_NORMAL_TEXT             = "black"
+	color_API_SECTION_HEADER_TEXT = "red"
+	color_MODEL_TEXT              = "orange"
+	color_NORMAL_BACKGROUND       = "white"
+	color_GET                     = "cyan"
+	color_POST                    = "green"
+	color_PUT                     = "orange"
+	color_DELETE                  = "cyan"
+	color_PATCH                   = "purple"
+	color_DEFAULT                 = "yellow"
+)
+
 type Markup interface {
 	sectionHeader(level int, text string) string
 	bulletedItem(level int, text string) string
@@ -21,6 +34,7 @@ type Markup interface {
 	tableHeaderRow(args ...string) string
 	tableRow(args ...string) string
 	tableFooter() string
+	colorSpan(content, foregroundColor, backgroundColor string) string
 }
 
 func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string) {
@@ -61,7 +75,7 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 		* Sub-API Specifications
 		***************************************************************/
 		buf.WriteString(markup.anchor(apiKey))
-		buf.WriteString(markup.sectionHeader(2, apiKey))
+		buf.WriteString(markup.sectionHeader(2, markup.colorSpan(apiKey, color_API_SECTION_HEADER_TEXT, color_NORMAL_BACKGROUND)))
 
 		buf.WriteString(markup.tableHeader(""))
 		buf.WriteString(markup.tableHeaderRow("Specification", "Value"))
@@ -98,7 +112,7 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 				buf.WriteString("\n")
 				operationString := fmt.Sprintf("%s (%s)", strings.Replace(strings.Replace(subapi.Path, "{", "\\{", -1), "}", "\\}", -1), op.HttpMethod)
 				buf.WriteString(markup.anchor(op.Nickname))
-				buf.WriteString(markup.sectionHeader(4, "API: "+operationString))
+				buf.WriteString(markup.sectionHeader(4, markup.colorSpan("API: "+operationString, color_NORMAL_TEXT, operationColor(op.HttpMethod))))
 				buf.WriteString("\n\n" + op.Summary + "\n\n\n")
 
 				if len(op.Parameters) > 0 {
@@ -136,7 +150,7 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 		for _, modelKey := range alphabeticalKeysOfModels(apiDescription.Models) {
 			model := apiDescription.Models[modelKey]
 			buf.WriteString(markup.anchor(modelKey))
-			buf.WriteString(markup.sectionHeader(4, shortModelName(modelKey)))
+			buf.WriteString(markup.sectionHeader(4, markup.colorSpan(shortModelName(modelKey), color_MODEL_TEXT, color_NORMAL_BACKGROUND)))
 			buf.WriteString(markup.tableHeader(""))
 			buf.WriteString(markup.tableHeaderRow("Field Name (alphabetical)", "Field Type", "Description"))
 			for _, fieldName := range alphabeticalKeysOfFields(model.Properties) {
@@ -206,4 +220,21 @@ func alphabeticalKeysOfFields(m map[string]*parser.ModelProperty) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func operationColor(methodName string) string {
+	switch methodName {
+	case "GET":
+		return color_GET
+	case "POST":
+		return color_POST
+	case "PUT":
+		return color_PUT
+	case "DELETE":
+		return color_DELETE
+	case "PATCH":
+		return color_PATCH
+	default:
+		return color_DEFAULT
+	}
 }
