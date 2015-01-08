@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	//"go/ast"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
