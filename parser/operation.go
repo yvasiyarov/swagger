@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	//"go/ast"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -52,7 +53,7 @@ func (operation *Operation) SetItemsType(itemsType string) {
 
 func (operation *Operation) ParseComment(comment string) error {
 	commentLine := strings.TrimSpace(strings.TrimLeft(comment, "//"))
-	attribute := strings.ToLower(strings.Split(commentLine, " ")[0])
+	attribute := strings.ToLower(strings.Fields(commentLine)[0])
 	switch attribute {
 	case "@router":
 		if err := operation.ParseRouterComment(commentLine); err != nil {
