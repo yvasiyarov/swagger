@@ -52,24 +52,24 @@ func (operation *Operation) SetItemsType(itemsType string) {
 
 func (operation *Operation) ParseComment(comment string) error {
 	commentLine := strings.TrimSpace(strings.TrimLeft(comment, "//"))
-	attribute := strings.ToLower(strings.Fields(commentLine)[0])
-	switch attribute {
+	attribute := strings.Fields(commentLine)[0]
+	switch strings.ToLower(attribute) {
 	case "@router":
 		if err := operation.ParseRouterComment(commentLine); err != nil {
 			return err
 		}
 	case "@resource":
-		resource := strings.TrimSpace(commentLine[len("@Resource"):])
+		resource := strings.TrimSpace(commentLine[len(attribute):])
 		if resource[0:1] == "/" {
 			resource = resource[1:]
 		}
 		operation.ForceResource = resource
 	case "@title":
-		operation.Nickname = strings.TrimSpace(commentLine[len("@Title"):])
+		operation.Nickname = strings.TrimSpace(commentLine[len(attribute):])
 	case "@description":
-		operation.Summary = strings.TrimSpace(commentLine[len("@Description"):])
+		operation.Summary = strings.TrimSpace(commentLine[len(attribute):])
 	case "@success":
-		sourceString := strings.TrimSpace(commentLine[len("@Success"):])
+		sourceString := strings.TrimSpace(commentLine[len(attribute):])
 		if err := operation.ParseResponseComment(sourceString); err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func (operation *Operation) ParseComment(comment string) error {
 			return err
 		}
 	case "@failure":
-		sourceString := strings.TrimSpace(commentLine[len("@Failure"):])
+		sourceString := strings.TrimSpace(commentLine[len(attribute):])
 		if err := operation.ParseResponseComment(sourceString); err != nil {
 			return err
 		}

@@ -59,22 +59,22 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
 			for _, commentLine := range strings.Split(comment.Text(), "\n") {
-				attribute := strings.ToLower(strings.Split(commentLine, " ")[0])
-				switch attribute {
+				attribute := strings.Split(commentLine, " ")[0]
+				switch strings.ToLower(attribute) {
 				case "@apiversion":
-					parser.Listing.ApiVersion = strings.TrimSpace(commentLine[len("@APIVersion"):])
+					parser.Listing.ApiVersion = strings.TrimSpace(commentLine[len(attribute):])
 				case "@apititle":
-					parser.Listing.Infos.Title = strings.TrimSpace(commentLine[len("@ApiTitle"):])
+					parser.Listing.Infos.Title = strings.TrimSpace(commentLine[len(attribute):])
 				case "@apidescription":
-					parser.Listing.Infos.Description = strings.TrimSpace(commentLine[len("@ApiDescription"):])
+					parser.Listing.Infos.Description = strings.TrimSpace(commentLine[len(attribute):])
 				case "@termsofserviceurl":
-					parser.Listing.Infos.TermsOfServiceUrl = strings.TrimSpace(commentLine[len("@TermsOfServiceUrl"):])
+					parser.Listing.Infos.TermsOfServiceUrl = strings.TrimSpace(commentLine[len(attribute):])
 				case "@contact":
-					parser.Listing.Infos.Contact = strings.TrimSpace(commentLine[len("@Contact"):])
+					parser.Listing.Infos.Contact = strings.TrimSpace(commentLine[len(attribute):])
 				case "@licenseurl":
-					parser.Listing.Infos.LicenseUrl = strings.TrimSpace(commentLine[len("@LicenseUrl"):])
+					parser.Listing.Infos.LicenseUrl = strings.TrimSpace(commentLine[len(attribute):])
 				case "@license":
-					parser.Listing.Infos.License = strings.TrimSpace(commentLine[len("@License"):])
+					parser.Listing.Infos.License = strings.TrimSpace(commentLine[len(attribute):])
 				}
 			}
 		}
