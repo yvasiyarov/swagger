@@ -26,7 +26,7 @@ type Markup interface {
 func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string) {
 	var filename string
 	if *outputSpec == "" {
-		filename = path.Join("./", "API", defaultFileExtension)
+		filename = path.Join("./", "API") + defaultFileExtension
 	} else {
 		filename = path.Join(*outputSpec)
 	}
