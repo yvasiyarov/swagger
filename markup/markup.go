@@ -116,9 +116,9 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 
 				if len(op.ResponseMessages) > 0 {
 					buf.WriteString(markup.tableHeader(""))
-					buf.WriteString(markup.tableHeaderRow("Code", "Message", "Model"))
+					buf.WriteString(markup.tableHeaderRow("Code", "Type", "Model", "Message"))
 					for _, msg := range op.ResponseMessages {
-						buf.WriteString(markup.tableRow(fmt.Sprintf("%v", msg.Code), msg.Message, modelText(markup, msg.ResponseModel)))
+						buf.WriteString(markup.tableRow(fmt.Sprintf("%v", msg.Code), msg.ResponseType, modelText(markup, msg.ResponseModel), msg.Message))
 					}
 					buf.WriteString(markup.tableFooter())
 				}
