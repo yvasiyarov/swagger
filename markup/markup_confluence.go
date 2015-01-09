@@ -63,3 +63,17 @@ func (this *MarkupConfluence) tableRow(args ...string) string {
 	}
 	return retval + "|\n"
 }
+
+func (this *MarkupConfluence) colorSpan(content, foregroundColor, backgroundColor string) string {
+	if foregroundColor == "black" && backgroundColor == "white" {
+		return content
+	}
+	if foregroundColor == "black" {
+		return fmt.Sprintf("{bgcolor:%s}%s{bgcolor}", backgroundColor, content)
+	}
+	if backgroundColor == "white" {
+		return fmt.Sprintf("{color:%s}%s{color}", foregroundColor, content)
+	}
+	return fmt.Sprintf("{color:%s}{bgcolor:%s}%s{bgcolor}{color}", foregroundColor, backgroundColor, content)
+
+}

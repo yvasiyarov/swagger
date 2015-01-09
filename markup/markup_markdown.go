@@ -65,3 +65,8 @@ func (this *MarkupMarkDown) tableRow(args ...string) string {
 func (this *MarkupMarkDown) tableFooter() string {
 	return "\n"
 }
+
+// Note: Github flavored markdown does not support colorization
+func (this *MarkupMarkDown) colorSpan(content, foregroundColor, backgroundColor string) string {
+	return content
+}
