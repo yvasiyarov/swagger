@@ -124,7 +124,7 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 		if goroot == "" {
 			log.Fatalf("Please, set $GOROOT environment variable\n")
 		}
-		if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(goroot, "src", "pkg", packagePath)); err == nil {
+		if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(goroot, "src", packagePath)); err == nil {
 			if _, err := os.Stat(evalutedPath); err == nil {
 				pkgRealpath = evalutedPath
 			}
