@@ -20,11 +20,11 @@ They should be placed in the "main" file of your application, above the "package
 The @-tags are not case sensitive (TODO Is this true?), but it is recommended to use the casing as shown, to be consistent.
 Each of these annotations take a single argument that is an unquoted string to the end of the line.
 The purpose of each annotation should be self-explanatory.
-They are all optional, although using at least @Title and @Description is highly recommended.
+They are all optional, although using at least @APITitle and @APIDescription is highly recommended.
 
     // @APIVersion 1.0.0
-    // @Title My Cool API
-    // @Description My API usually works as expected. But sometimes its not true
+    // @APITitle My Cool API
+    // @APIDescription My API usually works as expected. But sometimes it's not true
     // @Contact api@contact.me
     // @TermsOfServiceUrl http://google.com/
     // @License BSD
