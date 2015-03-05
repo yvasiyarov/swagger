@@ -109,6 +109,7 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 		log.Fatalf("Please, set $GOPATH environment variable\n")
 	}
 
+	// first check GOPATH
 	pkgRealpath := ""
 	gopathsList := filepath.SplitList(gopath)
 	for _, path := range gopathsList {
@@ -119,6 +120,8 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 			}
 		}
 	}
+
+	// next, check GOROOT (/src)
 	if pkgRealpath == "" {
 		goroot := filepath.Clean(runtime.GOROOT())
 		if goroot == "" {
@@ -127,6 +130,15 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 		if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(goroot, "src", packagePath)); err == nil {
 			if _, err := os.Stat(evalutedPath); err == nil {
 				pkgRealpath = evalutedPath
+			}
+		}
+
+		// next, check GOROOT (/src/pkg) (for golang < v1.4)
+		if pkgRealpath == "" {
+			if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(goroot, "src", "pkg", packagePath)); err == nil {
+				if _, err := os.Stat(evalutedPath); err == nil {
+					pkgRealpath = evalutedPath
+				}
 			}
 		}
 	}
