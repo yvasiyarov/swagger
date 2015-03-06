@@ -68,22 +68,20 @@ func (operation *Operation) ParseComment(comment string) error {
 		operation.Nickname = strings.TrimSpace(commentLine[len(attribute):])
 	case "@description":
 		operation.Summary = strings.TrimSpace(commentLine[len(attribute):])
-	case "@success":
-		sourceString := strings.TrimSpace(commentLine[len(attribute):])
-		if err := operation.ParseResponseComment(sourceString); err != nil {
+	case "@success", "@failure":
+		if err := operation.ParseResponseComment(strings.TrimSpace(commentLine[len(attribute):])); err != nil {
 			return err
 		}
 	case "@param":
-		if err := operation.ParseParamComment(commentLine); err != nil {
+		if err := operation.ParseParamComment(strings.TrimSpace(commentLine[len(attribute):])); err != nil {
 			return err
 		}
-	case "@failure":
-		sourceString := strings.TrimSpace(commentLine[len(attribute):])
-		if err := operation.ParseResponseComment(sourceString); err != nil {
+	case "@accept", "@consume":
+		if err := operation.ParseAcceptComment(strings.TrimSpace(commentLine[len(attribute):])); err != nil {
 			return err
 		}
-	case "@accept":
-		if err := operation.ParseAcceptComment(commentLine); err != nil {
+	case "@produce":
+		if err := operation.ParseProduceComment(strings.TrimSpace(commentLine[len(attribute):])); err != nil {
 			return err
 		}
 	}
@@ -142,7 +140,7 @@ func (operation *Operation) registerType(typeName string) (string, error) {
 // 			[param name]    [param type] [data type]  [is mandatory?]   [Comment]
 func (operation *Operation) ParseParamComment(commentLine string) error {
 	swaggerParameter := Parameter{}
-	paramString := strings.TrimSpace(commentLine[len("@Param "):])
+	paramString := commentLine
 
 	re := regexp.MustCompile(`([-\w]+)[\s]+([\w]+)[\s]+([\w.]+)[\s]+([\w]+)[\s]+"([^"]+)"`)
 
@@ -170,21 +168,39 @@ func (operation *Operation) ParseParamComment(commentLine string) error {
 
 // @Accept  json
 func (operation *Operation) ParseAcceptComment(commentLine string) error {
-	accepts := strings.Split(strings.TrimSpace(strings.TrimSpace(commentLine[len("@Accept"):])), ",")
+	accepts := strings.Split(commentLine, ",")
 	for _, a := range accepts {
 		switch a {
 		case "json", "application/json":
 			operation.Consumes = append(operation.Consumes, ContentTypeJson)
-			operation.Produces = append(operation.Produces, ContentTypeJson)
 		case "xml", "text/xml":
 			operation.Consumes = append(operation.Consumes, ContentTypeXml)
-			operation.Produces = append(operation.Produces, ContentTypeXml)
 		case "plain", "text/plain":
 			operation.Consumes = append(operation.Consumes, ContentTypePlain)
-			operation.Produces = append(operation.Produces, ContentTypePlain)
 		case "html", "text/html":
 			operation.Consumes = append(operation.Consumes, ContentTypeHtml)
+		case "mpfd", "multipart/form-data":
+			operation.Consumes = append(operation.Consumes, ContentTypeMultiPartFormData)
+		}
+	}
+	return nil
+}
+
+// @Produce  json
+func (operation *Operation) ParseProduceComment(commentLine string) error {
+	produces := strings.Split(commentLine, ",")
+	for _, a := range produces {
+		switch a {
+		case "json", "application/json":
+			operation.Produces = append(operation.Produces, ContentTypeJson)
+		case "xml", "text/xml":
+			operation.Produces = append(operation.Produces, ContentTypeXml)
+		case "plain", "text/plain":
+			operation.Produces = append(operation.Produces, ContentTypePlain)
+		case "html", "text/html":
 			operation.Produces = append(operation.Produces, ContentTypeHtml)
+		case "mpfd", "multipart/form-data":
+			operation.Produces = append(operation.Produces, ContentTypeMultiPartFormData)
 		}
 	}
 	return nil
@@ -227,6 +243,8 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 	if err != nil {
 		return err
 	}
+
+	response.ResponseType = strings.Trim(matches[2], "{}")
 
 	response.ResponseModel = typeName
 	if response.Code == 200 {

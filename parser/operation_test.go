@@ -1,11 +1,12 @@
 package parser_test
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/yvasiyarov/swagger/parser"
-	"strings"
-	"testing"
 )
 
 type OperationSuite struct {
@@ -117,8 +118,10 @@ func (suite *OperationSuite) TestParseComment() {
 `
 	op := parser.NewOperation(suite.parser, "test")
 	for _, line := range strings.Split(operationComment, "\n") {
-		err := op.ParseComment(line)
-		assert.Nil(suite.T(), err, "Can not parse operation comment")
+		if len(line) > 0 { // the initial newline in the test string causes a panic otherwise...
+			err := op.ParseComment(line)
+			assert.Nil(suite.T(), err, "Can not parse operation comment")
+		}
 	}
 
 	assert.Equal(suite.T(), op.Consumes, []string{parser.ContentTypeJson}, "Can no parse operation comment")
