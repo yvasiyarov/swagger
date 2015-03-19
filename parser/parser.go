@@ -461,7 +461,8 @@ func (parser *Parser) ParseSubApiDescription(commentLine string) {
 }
 
 func IsIgnoredPackage(packageName string) bool {
-	return packageName == "C" || packageName == "appengine/cloudsql" || packageName == "appengine/datastore"
+	r, _ := regexp.Compile("appengine+")
+        return packageName == "C" || r.MatchString(packageName)
 }
 
 func ParserFileFilter(info os.FileInfo) bool {
