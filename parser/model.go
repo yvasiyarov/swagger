@@ -283,6 +283,11 @@ func (p *ModelProperty) GetTypeAsString(fieldType interface{}) string {
 		} else {
 			//			log.Printf("Get type as string(no star expression)! %#v , type: %s\n", fieldType, fmt.Sprint(fieldType))
 			realType = fmt.Sprint(fieldType)
+			relationRegex, _ := regexp.Compile("^[A-Z].*")
+                        if relationRegex.MatchString(realType) {
+                                realType = "interface"
+                        }
+
 		}
 	}
 	return realType
