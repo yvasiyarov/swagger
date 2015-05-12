@@ -58,5 +58,5 @@ func main() {
 	log.Printf("Star listen to %s", listenTo)
 
 	http.ListenAndServe(listenTo, http.DefaultServeMux)
-	//http.ListenAndServe(":8080", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("./swagger-ui")) )
+	//http.ListenAndServe(":8080", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("./swagger-ui"))))
 }
