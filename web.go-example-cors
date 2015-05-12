@@ -45,7 +45,7 @@ func ApiDescriptionHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	flag.Parse()
 
-	//Add the url of the orgins you to access from 
+	//Add the url orgins to access from
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://www.example.com/"},
 	})
@@ -63,6 +63,6 @@ func main() {
 	log.Printf("Star listen to %s", listenTo)
 
 	http.ListenAndServe(listenTo, http.DefaultServeMux)
-	//http.ListenAndServe(listenTo, c.Handler(http.DefaultServeMux)) Allows cros to be used.
+	//http.ListenAndServe(listenTo, c.Handler(http.DefaultServeMux)) Allows cors to be used.
 	//http.ListenAndServe(":8080", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("./swagger-ui")) )
 }
