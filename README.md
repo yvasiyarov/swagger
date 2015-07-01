@@ -27,9 +27,9 @@ The main difference between this tool and Beego is that this generator doesn't d
 
 1. Add comments to your API source code, [see Declarative Comments Format ](https://github.com/yvasiyarov/swagger/wiki/Declarative-Comments-Format)
 
-2. Download Swagger for Go by using ````go get github.com/yvasiyarov/swagger.git````
+2. Download Swagger for Go by using ````go get github.com/yvasiyarov/swagger````
 
-3. Compile the Swagger generator.
+3. Or, compile the Swagger generator from sources.
     `go install`
 
     This will create a binary in your $GOPATH/bin folder called swagger (Mac/Unix) or swagger.exe (Windows).
