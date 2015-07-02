@@ -2,15 +2,20 @@ package main
 
 import (
 	"flag"
+	"os"
 	//	"fmt"
-	"log"
 	"net/http"
 	"strings"
+	"text/template"
+
+	"github.com/fvbock/endless"
+	log "github.com/mgutz/logxi/v1"
 )
 
 var host = flag.String("host", "0.0.0.0", "Host")
 var port = flag.String("port", "8080", "Port")
 var staticContent = flag.String("staticPath", "./swagger-ui", "Path to folder with Swagger UI")
+var apiurl = flag.String("api", "http://127.0.0.1", "The base path URI of the API service")
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	isJsonRequest := false
@@ -35,7 +40,12 @@ func ApiDescriptionHandler(w http.ResponseWriter, r *http.Request) {
 	apiKey := strings.Trim(r.RequestURI, "/")
 
 	if json, ok := apiDescriptionsJson[apiKey]; ok {
-		w.Write([]byte(json))
+		t, e := template.New("desc").Parse(json)
+		if e != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		t.Execute(w, *apiurl)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -55,8 +65,12 @@ func main() {
 	}
 
 	listenTo := *host + ":" + *port
-	log.Printf("Star listen to %s", listenTo)
+	log.Info("Star listen to %s", listenTo)
 
-	http.ListenAndServe(listenTo, http.DefaultServeMux)
-	//http.ListenAndServe(":8080", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("./swagger-ui"))))
+	err := endless.ListenAndServe(listenTo, http.DefaultServeMux)
+	if err != nil {
+		log.Error(err.Error())
+	}
+	log.Info("Server on %s stopped", listenTo)
+	os.Exit(0)
 }
