@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/yvasiyarov/swagger/markup"
-	"github.com/yvasiyarov/swagger/parser"
 	"go/ast"
 	"log"
 	"os"
 	"path"
 	"regexp"
 	"strings"
+
+	"github.com/yvasiyarov/swagger/markup"
+	"github.com/yvasiyarov/swagger/parser"
 )
 
 const (
@@ -21,7 +22,6 @@ const (
 
 var apiPackage = flag.String("apiPackage", "", "The package that implements the API controllers, relative to $GOPATH/src")
 var mainApiFile = flag.String("mainApiFile", "", "The file that contains the general API annotations, relative to $GOPATH/src")
-var basePath = flag.String("basePath", "http://127.0.0.1:3000", "Web service base path")
 var outputFormat = flag.String("format", "go", "Output format type for the generated files: "+AVAILABLE_FORMATS)
 var outputSpec = flag.String("output", "", "Output (path) for the generated file(s)")
 var controllerClass = flag.String("controllerClass", "", "Speed up parsing by specifying which receiver objects have the controller methods")
@@ -106,7 +106,7 @@ func generateSwaggerUiFiles(parser *parser.Parser) {
 func InitParser() *parser.Parser {
 	parser := parser.NewParser()
 
-	parser.BasePath = *basePath
+	parser.BasePath = "{{.}}"
 	parser.IsController = IsController
 
 	parser.TypesImplementingMarshalInterface["NullString"] = "string"
