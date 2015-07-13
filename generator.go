@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -53,10 +54,10 @@ func IsController(funcDeclaration *ast.FuncDecl) bool {
 	return false
 }
 
-func generateSwaggerDocs(parser *parser.Parser) {
+func generateSwaggerDocs(parser *parser.Parser) error {
 	fd, err := os.Create(path.Join(*outputSpec, "docs.go"))
 	if err != nil {
-		log.Fatalf("Can not create document file: %v\n", err)
+		return fmt.Errorf("Can not create document file: %v\n", err)
 	}
 	defer fd.Close()
 
@@ -67,7 +68,7 @@ func generateSwaggerDocs(parser *parser.Parser) {
 		apiDescriptions.WriteString("`")
 		json, err := json.MarshalIndent(apiDescription, "", "    ")
 		if err != nil {
-			log.Fatalf("Can not serialise []ApiDescription to JSON: %v\n", err)
+			return fmt.Errorf("Can not serialise []ApiDescription to JSON: %v\n", err)
 		}
 		apiDescriptions.Write(json)
 		apiDescriptions.WriteString("`,")
@@ -77,30 +78,40 @@ func generateSwaggerDocs(parser *parser.Parser) {
 	doc = strings.Replace(doc, "{{apiDescriptions}}", "map[string]string{"+apiDescriptions.String()+"}", -1)
 
 	fd.WriteString(doc)
+
+	return nil
 }
 
-func generateSwaggerUiFiles(parser *parser.Parser) {
+func generateSwaggerUiFiles(parser *parser.Parser) error {
 	fd, err := os.Create(path.Join(*outputSpec, "index.json"))
 	if err != nil {
-		log.Fatalf("Can not create the master index.json file: %v\n", err)
+		return fmt.Errorf("Can not create the master index.json file: %v\n", err)
 	}
 	defer fd.Close()
 	fd.WriteString(string(parser.GetResourceListingJson()))
 
 	for apiKey, apiDescription := range parser.TopLevelApis {
 		err = os.MkdirAll(path.Join(*outputSpec, apiKey), 0777)
+		if err != nil {
+			return err
+		}
+
 		fd, err = os.Create(path.Join(*outputSpec, apiKey, "index.json"))
 		if err != nil {
-			log.Fatalf("Can not create the %s/index.json file: %v\n", apiKey, err)
+			return fmt.Errorf("Can not create the %s/index.json file: %v\n", apiKey, err)
 		}
 		defer fd.Close()
+
 		json, err := json.MarshalIndent(apiDescription, "", "    ")
 		if err != nil {
-			log.Fatalf("Can not serialise []ApiDescription to JSON: %v\n", err)
+			return fmt.Errorf("Can not serialise []ApiDescription to JSON: %v\n", err)
 		}
+
 		fd.Write(json)
 		log.Printf("Wrote %v/index.json", apiKey)
 	}
+
+	return nil
 }
 
 func InitParser() *parser.Parser {
@@ -117,21 +128,15 @@ func InitParser() *parser.Parser {
 	return parser
 }
 
-func main() {
-	flag.Parse()
+type GeneratorParams struct {
+	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass string
+}
 
-	if *mainApiFile == "" {
-		*mainApiFile = *apiPackage + "/main.go"
-	}
-	if *apiPackage == "" {
-		flag.PrintDefaults()
-		return
-	}
-
+func Generate(params GeneratorParams) error {
 	parser := InitParser()
 	gopath := os.Getenv("GOPATH")
 	if gopath == "" {
-		log.Fatalf("Please, set $GOPATH environment variable\n")
+		return errors.New("Please, set $GOPATH environment variable\n")
 	}
 
 	log.Println("Start parsing")
@@ -140,40 +145,73 @@ func main() {
 	dirs := strings.Split(gopath, ":")
 	found := false
 	for _, d := range dirs {
-		apifile := path.Join(d, "src", *mainApiFile)
+		apifile := path.Join(d, "src", params.MainApiFile)
 		if _, err := os.Stat(apifile); err == nil {
 			parser.ParseGeneralApiInfo(apifile)
 			found = true
 		}
 	}
 	if found == false {
-		apifile := path.Join(gopath, "src", *mainApiFile)
-		f, _ := fmt.Printf("Could not find apifile %s to parse\n", apifile)
-		panic(f)
+		apifile := path.Join(gopath, "src", params.MainApiFile)
+		return fmt.Errorf("Could not find apifile %s to parse\n", apifile)
 	}
 
-	parser.ParseApi(*apiPackage)
+	parser.ParseApi(params.ApiPackage)
 	log.Println("Finish parsing")
 
-	format := strings.ToLower(*outputFormat)
+	var err error
+	confirmMsg := ""
+	format := strings.ToLower(params.OutputFormat)
 	switch format {
 	case "go":
-		generateSwaggerDocs(parser)
-		log.Println("Doc file generated")
+		err = generateSwaggerDocs(parser)
+		confirmMsg = "Doc file generated"
 	case "asciidoc":
-		markup.GenerateMarkup(parser, new(markup.MarkupAsciiDoc), outputSpec, ".adoc")
-		log.Println("AsciiDoc file generated")
+		err = markup.GenerateMarkup(parser, new(markup.MarkupAsciiDoc), &params.OutputSpec, ".adoc")
+		confirmMsg = "AsciiDoc file generated"
 	case "markdown":
-		markup.GenerateMarkup(parser, new(markup.MarkupMarkDown), outputSpec, ".md")
-		log.Println("MarkDown file generated")
+		err = markup.GenerateMarkup(parser, new(markup.MarkupMarkDown), &params.OutputSpec, ".md")
+		confirmMsg = "MarkDown file generated"
 	case "confluence":
-		markup.GenerateMarkup(parser, new(markup.MarkupConfluence), outputSpec, ".confluence")
-		log.Println("Confluence file generated")
+		err = markup.GenerateMarkup(parser, new(markup.MarkupConfluence), &params.OutputSpec, ".confluence")
+		confirmMsg = "Confluence file generated"
 	case "swagger":
-		generateSwaggerUiFiles(parser)
-		log.Println("Swagger UI files generated")
+		err = generateSwaggerUiFiles(parser)
+		confirmMsg = "Swagger UI files generated"
 	default:
-		log.Fatalf("Invalid -format specified. Must be one of %v.", AVAILABLE_FORMATS)
+		err = fmt.Errorf("Invalid -format specified. Must be one of %v.", AVAILABLE_FORMATS)
 	}
 
+	if err != nil {
+		return err
+	}
+	log.Println(confirmMsg)
+
+	return nil
+}
+
+func main() {
+	flag.Parse()
+
+	if *mainApiFile == "" {
+		*mainApiFile = *apiPackage + "/main.go"
+	}
+
+	if *apiPackage == "" {
+		flag.PrintDefaults()
+		return
+	}
+
+	params := GeneratorParams{
+		ApiPackage:      *apiPackage,
+		MainApiFile:     *mainApiFile,
+		OutputFormat:    *outputFormat,
+		OutputSpec:      *outputSpec,
+		ControllerClass: *controllerClass,
+	}
+
+	err := Generate(params)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
