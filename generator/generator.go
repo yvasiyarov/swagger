@@ -12,8 +12,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yvasiyarov/swagger/markup"
-	"github.com/yvasiyarov/swagger/parser"
+	"github.com/solher/swagger/markup"
+	"github.com/solher/swagger/parser"
 )
 
 const (

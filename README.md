@@ -16,18 +16,18 @@ The main difference between this tool and Beego is that this generator doesn't d
 <br>
 
 
-####Project Status : [Alpha](https://github.com/yvasiyarov/swagger/wiki/Declarative-Comments-Format)
-####Declarative Comments Format : [Read more ](https://github.com/yvasiyarov/swagger/wiki/Declarative-Comments-Format)
-####Technical Notes : [Read More ](https://github.com/yvasiyarov/swagger/wiki/Technical-Notes)
-####Known Limitations : [Read More ](https://github.com/yvasiyarov/swagger/wiki/Known-Limitations)
+####Project Status : [Alpha](https://github.com/solher/swagger/wiki/Declarative-Comments-Format)
+####Declarative Comments Format : [Read more ](https://github.com/solher/swagger/wiki/Declarative-Comments-Format)
+####Technical Notes : [Read More ](https://github.com/solher/swagger/wiki/Technical-Notes)
+####Known Limitations : [Read More ](https://github.com/solher/swagger/wiki/Known-Limitations)
 
 <br>
 #### Quick Start Guide
 
 
-1. Add comments to your API source code, [see Declarative Comments Format ](https://github.com/yvasiyarov/swagger/wiki/Declarative-Comments-Format)
+1. Add comments to your API source code, [see Declarative Comments Format ](https://github.com/solher/swagger/wiki/Declarative-Comments-Format)
 
-2. Download Swagger for Go by using ````go get github.com/yvasiyarov/swagger````
+2. Download Swagger for Go by using ````go get github.com/solher/swagger````
 
 3. Or, compile the Swagger generator from sources.
     `go install`
@@ -46,7 +46,7 @@ The main difference between this tool and Beego is that this generator doesn't d
     * **-output**       - Output specification. Default varies according to -format. See below.
     * **-controllerClass**  - Speed up parsing by specifying which receiver objects have the controller methods. The default is to search all methods. The argument can be a regular expression. For example, `-controllerClass="(Context|Controller)$"` means the receiver name must end in Context or Controller.
 
- [**You can Generate different formats** ](https://github.com/yvasiyarov/swagger/wiki/Generate-Different-Formats)
+ [**You can Generate different formats** ](https://github.com/solher/swagger/wiki/Generate-Different-Formats)
 
    <br>
 

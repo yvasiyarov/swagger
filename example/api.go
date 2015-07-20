@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/gocraft/web"
-	"github.com/yvasiyarov/swagger/example/subpackage"
+	"github.com/solher/swagger/example/subpackage"
 )
 
 type Context struct {
