@@ -8,7 +8,7 @@
 package main
 
 import (
-	"github.com/yvasiyarov/swagger/example"
+	"github.com/solher/swagger/example"
 	"net/http"
 )
 

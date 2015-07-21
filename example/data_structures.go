@@ -1,7 +1,7 @@
 package example
 
 import (
-//	"github.com/yvasiyarov/swagger/example/subpackage"
+//	"github.com/solher/swagger/example/subpackage"
 )
 
 type InterfaceType interface{}
