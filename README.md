@@ -16,18 +16,18 @@ The main difference between this tool and Beego is that this generator doesn't d
 <br>
 
 
-####Project Status : [Alpha](https://github.com/solher/swagger/wiki/Declarative-Comments-Format)
-####Declarative Comments Format : [Read more ](https://github.com/solher/swagger/wiki/Declarative-Comments-Format)
-####Technical Notes : [Read More ](https://github.com/solher/swagger/wiki/Technical-Notes)
-####Known Limitations : [Read More ](https://github.com/solher/swagger/wiki/Known-Limitations)
+####Project Status : [Alpha](https://github.com/yvasiyarov/swagger/wiki/Declarative-Comments-Format)
+####Declarative Comments Format : [Read more ](https://github.com/yvasiyarov/swagger/wiki/Declarative-Comments-Format)
+####Technical Notes : [Read More ](https://github.com/yvasiyarov/swagger/wiki/Technical-Notes)
+####Known Limitations : [Read More ](https://github.com/yvasiyarov/swagger/wiki/Known-Limitations)
 
 <br>
 #### Quick Start Guide
 
 
-1. Add comments to your API source code, [see Declarative Comments Format ](https://github.com/solher/swagger/wiki/Declarative-Comments-Format)
+1. Add comments to your API source code, [see Declarative Comments Format ](https://github.com/yvasiyarov/swagger/wiki/Declarative-Comments-Format)
 
-2. Download Swagger for Go by using ````go get github.com/solher/swagger````
+2. Download Swagger for Go by using ````go get github.com/yvasiyarov/swagger````
 
 3. Or, compile the Swagger generator from sources.
     `go install`
@@ -37,19 +37,26 @@ The main difference between this tool and Beego is that this generator doesn't d
 3. Run the Swagger generator.
     Be in the folder with your annotated API source code and run the swagger binary:
 
-    `./$GOPATH/bin/swagger -apiPackage="my_cool_api" -mainApiFile="my_cool_api/web/main.go"`
+    `./$GOPATH/bin/swagger -apiPackage="my_cool_api" -mainApiFile="my_cool_api/web/main.go" -basePath="http://127.0.0.1:3000"`
 
     Command line switches are:
     * **-apiPackage**  - package with API controllers implementation
     * **-mainApiFile** - main API file. We will look for "General API info" in this file. If the mainApiFile command-line switch is left blank, then main.go is assumed (in the location specified by apiPackage).
+    * **-basePath**     - Your API URL. Test requests will be sent to this URL
     * **-format**       - One of: go|swagger|asciidoc|markdown|confluence. Default is -format="go". See below.
     * **-output**       - Output specification. Default varies according to -format. See below.
     * **-controllerClass**  - Speed up parsing by specifying which receiver objects have the controller methods. The default is to search all methods. The argument can be a regular expression. For example, `-controllerClass="(Context|Controller)$"` means the receiver name must end in Context or Controller.
 
- [**You can Generate different formats** ](https://github.com/solher/swagger/wiki/Generate-Different-Formats)
-
+ [**You can Generate different formats** ](https://github.com/yvasiyarov/swagger/wiki/Generate-Different-Formats) 
+   
    <br>
 
 4. To run the generated swagger UI (assuming you used -format="go"), copy/move the generated docs.go file to a new folder under GOPATH/src. Also bring in the web.go-example file, renaming it to web.go. Then: **go run web.go docs.go**
 
 5. Enjoy it :-)
+
+
+
+
+
+

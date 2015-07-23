@@ -1,9 +1,10 @@
-package generator
+package main
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"go/ast"
 	"log"
@@ -12,13 +13,19 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/solher/swagger/markup"
-	"github.com/solher/swagger/parser"
+	"github.com/yvasiyarov/swagger/markup"
+	"github.com/yvasiyarov/swagger/parser"
 )
 
 const (
 	AVAILABLE_FORMATS = "go|swagger|asciidoc|markdown|confluence"
 )
+
+var apiPackage = flag.String("apiPackage", "", "The package that implements the API controllers, relative to $GOPATH/src")
+var mainApiFile = flag.String("mainApiFile", "", "The file that contains the general API annotations, relative to $GOPATH/src")
+var outputFormat = flag.String("format", "go", "Output format type for the generated files: "+AVAILABLE_FORMATS)
+var outputSpec = flag.String("output", "", "Output (path) for the generated file(s)")
+var controllerClass = flag.String("controllerClass", "", "Speed up parsing by specifying which receiver objects have the controller methods")
 
 var generatedFileTemplate = `
 package main
@@ -29,15 +36,15 @@ var apiDescriptionsJson = {{apiDescriptions}}
 `
 
 // It must return true if funcDeclaration is controller. We will try to parse only comments before controllers
-func IsController(funcDeclaration *ast.FuncDecl, controllerClass string) bool {
-	if len(controllerClass) == 0 {
+func IsController(funcDeclaration *ast.FuncDecl) bool {
+	if len(*controllerClass) == 0 {
 		// Search every method
 		return true
 	}
 	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
 		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
 			receiverName := fmt.Sprint(starExpression.X)
-			matched, err := regexp.MatchString(string(controllerClass), receiverName)
+			matched, err := regexp.MatchString(string(*controllerClass), receiverName)
 			if err != nil {
 				log.Fatalf("The -controllerClass argument is not a valid regular expression: %v\n", err)
 			}
@@ -47,8 +54,8 @@ func IsController(funcDeclaration *ast.FuncDecl, controllerClass string) bool {
 	return false
 }
 
-func generateSwaggerDocs(parser *parser.Parser, outputSpec string) error {
-	fd, err := os.Create(path.Join(outputSpec, "docs.go"))
+func generateSwaggerDocs(parser *parser.Parser) error {
+	fd, err := os.Create(path.Join(*outputSpec, "docs.go"))
 	if err != nil {
 		return fmt.Errorf("Can not create document file: %v\n", err)
 	}
@@ -75,8 +82,8 @@ func generateSwaggerDocs(parser *parser.Parser, outputSpec string) error {
 	return nil
 }
 
-func generateSwaggerUiFiles(parser *parser.Parser, outputSpec string) error {
-	fd, err := os.Create(path.Join(outputSpec, "index.json"))
+func generateSwaggerUiFiles(parser *parser.Parser) error {
+	fd, err := os.Create(path.Join(*outputSpec, "index.json"))
 	if err != nil {
 		return fmt.Errorf("Can not create the master index.json file: %v\n", err)
 	}
@@ -84,12 +91,12 @@ func generateSwaggerUiFiles(parser *parser.Parser, outputSpec string) error {
 	fd.WriteString(string(parser.GetResourceListingJson()))
 
 	for apiKey, apiDescription := range parser.TopLevelApis {
-		err = os.MkdirAll(path.Join(outputSpec, apiKey), 0777)
+		err = os.MkdirAll(path.Join(*outputSpec, apiKey), 0777)
 		if err != nil {
 			return err
 		}
 
-		fd, err = os.Create(path.Join(outputSpec, apiKey, "index.json"))
+		fd, err = os.Create(path.Join(*outputSpec, apiKey, "index.json"))
 		if err != nil {
 			return fmt.Errorf("Can not create the %s/index.json file: %v\n", apiKey, err)
 		}
@@ -107,11 +114,10 @@ func generateSwaggerUiFiles(parser *parser.Parser, outputSpec string) error {
 	return nil
 }
 
-func InitParser(controllerClass string) *parser.Parser {
+func InitParser() *parser.Parser {
 	parser := parser.NewParser()
 
 	parser.BasePath = "{{.}}"
-	parser.ControllerClass = controllerClass
 	parser.IsController = IsController
 
 	parser.TypesImplementingMarshalInterface["NullString"] = "string"
@@ -122,12 +128,12 @@ func InitParser(controllerClass string) *parser.Parser {
 	return parser
 }
 
-type Params struct {
+type GeneratorParams struct {
 	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass string
 }
 
-func Run(params Params) error {
-	parser := InitParser(params.ControllerClass)
+func Generate(params GeneratorParams) error {
+	parser := InitParser()
 	gopath := os.Getenv("GOPATH")
 	if gopath == "" {
 		return errors.New("Please, set $GOPATH environment variable\n")
@@ -158,7 +164,7 @@ func Run(params Params) error {
 	format := strings.ToLower(params.OutputFormat)
 	switch format {
 	case "go":
-		err = generateSwaggerDocs(parser, params.OutputSpec)
+		err = generateSwaggerDocs(parser)
 		confirmMsg = "Doc file generated"
 	case "asciidoc":
 		err = markup.GenerateMarkup(parser, new(markup.MarkupAsciiDoc), &params.OutputSpec, ".adoc")
@@ -170,7 +176,7 @@ func Run(params Params) error {
 		err = markup.GenerateMarkup(parser, new(markup.MarkupConfluence), &params.OutputSpec, ".confluence")
 		confirmMsg = "Confluence file generated"
 	case "swagger":
-		err = generateSwaggerUiFiles(parser, params.OutputSpec)
+		err = generateSwaggerUiFiles(parser)
 		confirmMsg = "Swagger UI files generated"
 	default:
 		err = fmt.Errorf("Invalid -format specified. Must be one of %v.", AVAILABLE_FORMATS)
@@ -182,4 +188,30 @@ func Run(params Params) error {
 	log.Println(confirmMsg)
 
 	return nil
+}
+
+func main() {
+	flag.Parse()
+
+	if *mainApiFile == "" {
+		*mainApiFile = *apiPackage + "/main.go"
+	}
+
+	if *apiPackage == "" {
+		flag.PrintDefaults()
+		return
+	}
+
+	params := GeneratorParams{
+		ApiPackage:      *apiPackage,
+		MainApiFile:     *mainApiFile,
+		OutputFormat:    *outputFormat,
+		OutputSpec:      *outputSpec,
+		ControllerClass: *controllerClass,
+	}
+
+	err := Generate(params)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }

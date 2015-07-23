@@ -4,9 +4,8 @@ package example
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/gocraft/web"
-	"github.com/solher/swagger/example/subpackage"
+	"github.com/yvasiyarov/swagger/example/subpackage"
 )
 
 type Context struct {
