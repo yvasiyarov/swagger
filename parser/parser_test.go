@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/solher/swagger/parser"
+	"github.com/yvasiyarov/swagger/parser"
 	"go/ast"
 	//	"log"
 	"os"
@@ -44,8 +44,8 @@ func (suite *ParserSuite) SetupSuite() {
 			suite.T().Fatalf("Please, set $GOPATH environment variable\n")
 		}
 
-		initialisedParser2.ParseGeneralApiInfo(path.Join(gopath, "src", "github.com/solher/swagger/example/web/main.go"))
-		initialisedParser2.ParseApi("github.com/solher/swagger/example")
+		initialisedParser2.ParseGeneralApiInfo(path.Join(gopath, "src", "github.com/yvasiyarov/swagger/example/web/main.go"))
+		initialisedParser2.ParseApi("github.com/yvasiyarov/swagger/example")
 	}
 	suite.parser = initialisedParser2
 }
