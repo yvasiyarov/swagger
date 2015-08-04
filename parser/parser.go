@@ -55,14 +55,15 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 		log.Fatalf("Can not parse general API information: %v\n", err)
 	}
 
-	parser.Listing.SwaggerVersion = SwaggerVersion
+	parser.Listing.Swagger = Swagger
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
 			for _, commentLine := range strings.Split(comment.Text(), "\n") {
 				attribute := strings.ToLower(strings.Split(commentLine, " ")[0])
 				switch attribute {
-				case "@apiversion":
-					parser.Listing.ApiVersion = strings.TrimSpace(commentLine[len(attribute):])
+				case "@version":
+					parser.Listing.Version = strings.TrimSpace(commentLine[len(attribute):])
+                    parser.Listing.Infos.Version = strings.TrimSpace(commentLine[len(attribute):])
 				case "@apititle":
 					parser.Listing.Infos.Title = strings.TrimSpace(commentLine[len(attribute):])
 				case "@apidescription":
@@ -188,8 +189,8 @@ func (parser *Parser) AddOperation(op *Operation) {
 	if !ok {
 		api = NewApiDeclaration()
 
-		api.ApiVersion = parser.Listing.ApiVersion
-		api.SwaggerVersion = SwaggerVersion
+		api.Version = parser.Listing.Version
+		api.Swagger = Swagger
 		api.ResourcePath = "/" + resource
 		api.BasePath = parser.BasePath
 

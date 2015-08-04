@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/yvasiyarov/swagger/parser"
+    "github.com/yvasiyarov/swagger/parser"
 	"go/ast"
 	//	"log"
 	"os"
@@ -60,8 +60,8 @@ func (suite *ParserSuite) TestTopLevelAPI() {
 		suite.T().Fatalf("Can not find top level API:%v", suite.parser.TopLevelApis)
 	} else {
 		assert.Equal(suite.T(), exampleBasePath, topApi.BasePath, "Base path not set correctly")
-		assert.NotEmpty(suite.T(), topApi.ApiVersion, "API version not filled")
-		assert.NotEmpty(suite.T(), topApi.SwaggerVersion, "Swagger version not filled")
+		assert.NotEmpty(suite.T(), topApi.Version, "API version not filled")
+		assert.NotEmpty(suite.T(), topApi.Swagger, "Swagger version not filled")
 		assert.Equal(suite.T(), topApi.ResourcePath, "/testapi", "Resource path invalid")
 
 		expectedTypes := []string{parser.ContentTypeJson}
@@ -320,8 +320,8 @@ func (suite *ParserSuite) TestAPIListing() {
 	assert.NotEmpty(suite.T(), suite.parser.Listing.Apis[0].Path, "Path is empty")
 	assert.NotEmpty(suite.T(), suite.parser.Listing.Apis[0].Description, "Description is empty")
 
-	assert.NotEmpty(suite.T(), suite.parser.Listing.ApiVersion, "Api version not parsed")
-	assert.NotEmpty(suite.T(), suite.parser.Listing.SwaggerVersion, "Swagger version not parsed")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Version, "Api version not parsed")
+	assert.NotEmpty(suite.T(), suite.parser.Listing.Swagger, "Swagger version not parsed")
 
 	assert.NotNil(suite.T(), suite.parser.Listing.Infos, "Info is null")
 	assert.NotEmpty(suite.T(), suite.parser.Listing.Infos.Contact, "Contact is not parsed")
