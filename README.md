@@ -16,7 +16,7 @@ The main difference between this tool and Beego is that this generator doesn't d
 ####Declarative Comments Format : [Read more ](https://github.com/yvasiyarov/swagger/wiki/Declarative-Comments-Format)
 ####Technical Notes : [Read More ](https://github.com/yvasiyarov/swagger/wiki/Technical-Notes)
 ####Known Limitations : [Read More ](https://github.com/yvasiyarov/swagger/wiki/Known-Limitations)
-### Swagger Version : 2.0
+#### Swagger Version : 2.0
 <br>
 #### Quick Start Guide
 
