@@ -1,6 +1,9 @@
 
 ![alt text]( https://s3.amazonaws.com/tw-chat/attach/579528d6e2f2c2aebfe7f957e4572ca0/1.png  "Swagger In Golang")
 
+### Note :
+This is the branch to develop the swagger in go to the swagger spec.
+See spec here  [Spec](http://swagger.io/specification/)
 
 ###About
 
