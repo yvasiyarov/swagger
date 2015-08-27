@@ -54,7 +54,8 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	if err != nil {
 		log.Fatalf("Can not parse general API information: %v\n", err)
 	}
-
+	
+	parser.Listing.BasePath = "{{.}}"
 	parser.Listing.SwaggerVersion = SwaggerVersion
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
@@ -75,6 +76,8 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 					parser.Listing.Infos.LicenseUrl = strings.TrimSpace(commentLine[len(attribute):])
 				case "@license":
 					parser.Listing.Infos.License = strings.TrimSpace(commentLine[len(attribute):])
+				case "@basepath":
+					parser.Listing.BasePath = strings.TrimSpace(commentLine[len(attribute):])
 				}
 			}
 		}
@@ -191,7 +194,7 @@ func (parser *Parser) AddOperation(op *Operation) {
 		api.ApiVersion = parser.Listing.ApiVersion
 		api.SwaggerVersion = SwaggerVersion
 		api.ResourcePath = "/" + resource
-		api.BasePath = parser.BasePath
+		api.BasePath = parser.Listing.BasePath
 
 		parser.TopLevelApis[resource] = api
 	}

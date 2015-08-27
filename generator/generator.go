@@ -110,7 +110,6 @@ func generateSwaggerUiFiles(parser *parser.Parser, outputSpec string) error {
 func InitParser(controllerClass string) *parser.Parser {
 	parser := parser.NewParser()
 
-	parser.BasePath = "{{.}}"
 	parser.ControllerClass = controllerClass
 	parser.IsController = IsController
 
