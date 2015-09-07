@@ -21,7 +21,7 @@ type Parser struct {
 	TypeDefinitions                   map[string]map[string]*ast.TypeSpec
 	PackagePathCache                  map[string]string
 	PackageImports                    map[string]map[string][]string
-	BasePath, ControllerClass         string
+	BasePath, ControllerClass, Ignore string
 	IsController                      func(*ast.FuncDecl, string) bool
 	TypesImplementingMarshalInterface map[string]string
 }
@@ -298,7 +298,7 @@ func (parser *Parser) ParseImportStatements(packageName string) map[string]bool 
 		for _, astFile := range astPackage.Files {
 			for _, astImport := range astFile.Imports {
 				importedPackageName := strings.Trim(astImport.Path.Value, "\"")
-				if !IsIgnoredPackage(importedPackageName) {
+				if !parser.isIgnoredPackage(importedPackageName) {
 					realPath := parser.GetRealPackagePath(importedPackageName)
 					//log.Printf("path: %#v, original path: %#v", realPath, astImport.Path.Value)
 					if _, ok := parser.TypeDefinitions[realPath]; !ok {
@@ -460,9 +460,13 @@ func (parser *Parser) ParseSubApiDescription(commentLine string) {
 	}
 }
 
-func IsIgnoredPackage(packageName string) bool {
+func (parser *Parser) isIgnoredPackage(packageName string) bool {
 	r, _ := regexp.Compile("appengine+")
-	return packageName == "C" || r.MatchString(packageName)
+	matched, err := regexp.MatchString(parser.Ignore, packageName)
+	if err != nil {
+		log.Fatalf("The -ignore argument is not a valid regular expression: %v\n", err)
+	}
+	return packageName == "C" || r.MatchString(packageName) || matched
 }
 
 func ParserFileFilter(info os.FileInfo) bool {
