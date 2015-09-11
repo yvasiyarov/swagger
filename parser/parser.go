@@ -21,8 +21,8 @@ type Parser struct {
 	TypeDefinitions                   map[string]map[string]*ast.TypeSpec
 	PackagePathCache                  map[string]string
 	PackageImports                    map[string]map[string][]string
-	BasePath                          string
-	IsController                      func(*ast.FuncDecl) bool
+	BasePath, ControllerClass, Ignore string
+	IsController                      func(*ast.FuncDecl, string) bool
 	TypesImplementingMarshalInterface map[string]string
 }
 
@@ -54,8 +54,14 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	if err != nil {
 		log.Fatalf("Can not parse general API information: %v\n", err)
 	}
+<<<<<<< HEAD
 
 	parser.Listing.Swagger = Swagger
+=======
+	
+	parser.Listing.BasePath = "{{.}}"
+	parser.Listing.SwaggerVersion = SwaggerVersion
+>>>>>>> yvasiyarov/swagger2.0
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
 			for _, commentLine := range strings.Split(comment.Text(), "\n") {
@@ -76,6 +82,8 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 					parser.Listing.Infos.LicenseUrl = strings.TrimSpace(commentLine[len(attribute):])
 				case "@license":
 					parser.Listing.Infos.License = strings.TrimSpace(commentLine[len(attribute):])
+				case "@basepath":
+					parser.Listing.BasePath = strings.TrimSpace(commentLine[len(attribute):])
 				}
 			}
 		}
@@ -192,7 +200,7 @@ func (parser *Parser) AddOperation(op *Operation) {
 		api.Version = parser.Listing.Version
 		api.Swagger = Swagger
 		api.ResourcePath = "/" + resource
-		api.BasePath = parser.BasePath
+		api.BasePath = parser.Listing.BasePath
 
 		parser.TopLevelApis[resource] = api
 	}
@@ -299,7 +307,7 @@ func (parser *Parser) ParseImportStatements(packageName string) map[string]bool 
 		for _, astFile := range astPackage.Files {
 			for _, astImport := range astFile.Imports {
 				importedPackageName := strings.Trim(astImport.Path.Value, "\"")
-				if !IsIgnoredPackage(importedPackageName) {
+				if !parser.isIgnoredPackage(importedPackageName) {
 					realPath := parser.GetRealPackagePath(importedPackageName)
 					//log.Printf("path: %#v, original path: %#v", realPath, astImport.Path.Value)
 					if _, ok := parser.TypeDefinitions[realPath]; !ok {
@@ -408,7 +416,7 @@ func (parser *Parser) ParseApiDescription(packageName string) {
 			for _, astDescription := range astFile.Decls {
 				switch astDeclaration := astDescription.(type) {
 				case *ast.FuncDecl:
-					if parser.IsController(astDeclaration) {
+					if parser.IsController(astDeclaration, parser.ControllerClass) {
 						operation := NewOperation(parser, packageName)
 						if astDeclaration.Doc != nil && astDeclaration.Doc.List != nil {
 							for _, comment := range astDeclaration.Doc.List {
@@ -461,9 +469,13 @@ func (parser *Parser) ParseSubApiDescription(commentLine string) {
 	}
 }
 
-func IsIgnoredPackage(packageName string) bool {
+func (parser *Parser) isIgnoredPackage(packageName string) bool {
 	r, _ := regexp.Compile("appengine+")
-        return packageName == "C" || r.MatchString(packageName)
+	matched, err := regexp.MatchString(parser.Ignore, packageName)
+	if err != nil {
+		log.Fatalf("The -ignore argument is not a valid regular expression: %v\n", err)
+	}
+	return packageName == "C" || r.MatchString(packageName) || matched
 }
 
 func ParserFileFilter(info os.FileInfo) bool {

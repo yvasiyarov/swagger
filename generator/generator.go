@@ -1,9 +1,13 @@
-package main
+package generator
 
 import (
 	"bytes"
 	"encoding/json"
+<<<<<<< HEAD:generator.go
 	"flag"
+=======
+	"errors"
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 	"fmt"
 	"github.com/yvasiyarov/swagger/markup"
 	"github.com/yvasiyarov/swagger/parser"
@@ -19,6 +23,7 @@ const (
 	AVAILABLE_FORMATS = "go|swagger|asciidoc|markdown|confluence"
 )
 
+<<<<<<< HEAD:generator.go
 var apiPackage = flag.String("apiPackage", "", "The package that implements the API controllers, relative to $GOPATH/src")
 var mainApiFile = flag.String("mainApiFile", "", "The file that contains the general API annotations, relative to $GOPATH/src")
 var basePath = flag.String("basePath", "http://127.0.0.1:3000", "Web service base path")
@@ -26,6 +31,8 @@ var outputFormat = flag.String("format", "go", "Output format type for the gener
 var outputSpec = flag.String("output", "", "Output (path) for the generated file(s)")
 var controllerClass = flag.String("controllerClass", "", "Speed up parsing by specifying which receiver objects have the controller methods")
 
+=======
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 var generatedFileTemplate = `
 package main
 //This file is generated automatically. Do not try to edit it manually.
@@ -35,15 +42,15 @@ var apiDescriptionsJson = {{apiDescriptions}}
 `
 
 // It must return true if funcDeclaration is controller. We will try to parse only comments before controllers
-func IsController(funcDeclaration *ast.FuncDecl) bool {
-	if len(*controllerClass) == 0 {
+func IsController(funcDeclaration *ast.FuncDecl, controllerClass string) bool {
+	if len(controllerClass) == 0 {
 		// Search every method
 		return true
 	}
 	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
 		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
 			receiverName := fmt.Sprint(starExpression.X)
-			matched, err := regexp.MatchString(string(*controllerClass), receiverName)
+			matched, err := regexp.MatchString(string(controllerClass), receiverName)
 			if err != nil {
 				log.Fatalf("The -controllerClass argument is not a valid regular expression: %v\n", err)
 			}
@@ -53,8 +60,13 @@ func IsController(funcDeclaration *ast.FuncDecl) bool {
 	return false
 }
 
+<<<<<<< HEAD:generator.go
 func generateSwaggerDocs(parser *parser.Parser) {
 	fd, err := os.Create(path.Join(*outputSpec, "docs.go"))
+=======
+func generateSwaggerDocs(parser *parser.Parser, outputSpec string) error {
+	fd, err := os.Create(path.Join(outputSpec, "docs.go"))
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 	if err != nil {
 		log.Fatalf("Can not create document file: %v\n", err)
 	}
@@ -79,8 +91,13 @@ func generateSwaggerDocs(parser *parser.Parser) {
 	fd.WriteString(doc)
 }
 
+<<<<<<< HEAD:generator.go
 func generateSwaggerUiFiles(parser *parser.Parser) {
 	fd, err := os.Create(path.Join(*outputSpec, "index.json"))
+=======
+func generateSwaggerUiFiles(parser *parser.Parser, outputSpec string) error {
+	fd, err := os.Create(path.Join(outputSpec, "index.json"))
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 	if err != nil {
 		log.Fatalf("Can not create the master index.json file: %v\n", err)
 	}
@@ -88,8 +105,17 @@ func generateSwaggerUiFiles(parser *parser.Parser) {
 	fd.WriteString(string(parser.GetResourceListingJson()))
 
 	for apiKey, apiDescription := range parser.TopLevelApis {
+<<<<<<< HEAD:generator.go
 		err = os.MkdirAll(path.Join(*outputSpec, apiKey), 0777)
 		fd, err = os.Create(path.Join(*outputSpec, apiKey, "index.json"))
+=======
+		err = os.MkdirAll(path.Join(outputSpec, apiKey), 0777)
+		if err != nil {
+			return err
+		}
+
+		fd, err = os.Create(path.Join(outputSpec, apiKey, "index.json"))
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 		if err != nil {
 			log.Fatalf("Can not create the %s/index.json file: %v\n", apiKey, err)
 		}
@@ -103,11 +129,16 @@ func generateSwaggerUiFiles(parser *parser.Parser) {
 	}
 }
 
-func InitParser() *parser.Parser {
+func InitParser(controllerClass, ignore string) *parser.Parser {
 	parser := parser.NewParser()
 
+<<<<<<< HEAD:generator.go
 	parser.BasePath = *basePath
+=======
+	parser.ControllerClass = controllerClass
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 	parser.IsController = IsController
+	parser.Ignore = ignore
 
 	parser.TypesImplementingMarshalInterface["NullString"] = "string"
 	parser.TypesImplementingMarshalInterface["NullInt64"] = "int"
@@ -117,6 +148,7 @@ func InitParser() *parser.Parser {
 	return parser
 }
 
+<<<<<<< HEAD:generator.go
 func main() {
 	flag.Parse()
 
@@ -129,6 +161,14 @@ func main() {
 	}
 
 	parser := InitParser()
+=======
+type Params struct {
+	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass, Ignore string
+}
+
+func Run(params Params) error {
+	parser := InitParser(params.ControllerClass, params.Ignore)
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 	gopath := os.Getenv("GOPATH")
 	if gopath == "" {
 		log.Fatalf("Please, set $GOPATH environment variable\n")
@@ -158,8 +198,13 @@ func main() {
 	format := strings.ToLower(*outputFormat)
 	switch format {
 	case "go":
+<<<<<<< HEAD:generator.go
 		generateSwaggerDocs(parser)
 		log.Println("Doc file generated")
+=======
+		err = generateSwaggerDocs(parser, params.OutputSpec)
+		confirmMsg = "Doc file generated"
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 	case "asciidoc":
 		markup.GenerateMarkup(parser, new(markup.MarkupAsciiDoc), outputSpec, ".adoc")
 		log.Println("AsciiDoc file generated")
@@ -170,10 +215,25 @@ func main() {
 		markup.GenerateMarkup(parser, new(markup.MarkupConfluence), outputSpec, ".confluence")
 		log.Println("Confluence file generated")
 	case "swagger":
+<<<<<<< HEAD:generator.go
 		generateSwaggerUiFiles(parser)
 		log.Println("Swagger UI files generated")
 	default:
 		log.Fatalf("Invalid -format specified. Must be one of %v.", AVAILABLE_FORMATS)
 	}
 
+=======
+		err = generateSwaggerUiFiles(parser, params.OutputSpec)
+		confirmMsg = "Swagger UI files generated"
+	default:
+		err = fmt.Errorf("Invalid -format specified. Must be one of %v.", AVAILABLE_FORMATS)
+	}
+
+	if err != nil {
+		return err
+	}
+	log.Println(confirmMsg)
+
+	return nil
+>>>>>>> yvasiyarov/swagger2.0:generator/generator.go
 }
