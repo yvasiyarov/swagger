@@ -107,11 +107,12 @@ func generateSwaggerUiFiles(parser *parser.Parser, outputSpec string) error {
 	return nil
 }
 
-func InitParser(controllerClass string) *parser.Parser {
+func InitParser(controllerClass, ignore string) *parser.Parser {
 	parser := parser.NewParser()
 
 	parser.ControllerClass = controllerClass
 	parser.IsController = IsController
+	parser.Ignore = ignore
 
 	parser.TypesImplementingMarshalInterface["NullString"] = "string"
 	parser.TypesImplementingMarshalInterface["NullInt64"] = "int"
@@ -122,11 +123,11 @@ func InitParser(controllerClass string) *parser.Parser {
 }
 
 type Params struct {
-	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass string
+	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass, Ignore string
 }
 
 func Run(params Params) error {
-	parser := InitParser(params.ControllerClass)
+	parser := InitParser(params.ControllerClass, params.Ignore)
 	gopath := os.Getenv("GOPATH")
 	if gopath == "" {
 		return errors.New("Please, set $GOPATH environment variable\n")
