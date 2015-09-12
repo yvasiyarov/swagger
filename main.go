@@ -12,7 +12,7 @@ var mainApiFile = flag.String("mainApiFile", "", "The file that contains the gen
 var outputFormat = flag.String("format", "go", "Output format type for the generated files: "+generator.AVAILABLE_FORMATS)
 var outputSpec = flag.String("output", "", "Output (path) for the generated file(s)")
 var controllerClass = flag.String("controllerClass", "", "Speed up parsing by specifying which receiver objects have the controller methods")
-var ignore = flag.String("ignore", "", "Ignore packages that satisfy this match")
+var ignore = flag.String("ignore", "^$", "Ignore packages that satisfy this match")
 
 func main() {
 	flag.Parse()
