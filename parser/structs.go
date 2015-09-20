@@ -16,15 +16,10 @@ const (
 var CommentIsEmptyError = errors.New("Comment is empty")
 
 type ResourceListing struct {
-<<<<<<< HEAD
+
 	Version     string `json:"version"`
 	Swagger string `json:"swagger"`
-	//	BasePath       string     `json:"basePath"`
-=======
-	ApiVersion     string `json:"apiVersion"`
-	SwaggerVersion string `json:"swaggerVersion"`
 	BasePath       string `json:"basePath,omitempty"`
->>>>>>> yvasiyarov/swagger2.0
 	Apis  []*ApiRef  `json:"apis"`
 	Infos Infomation `json:"info"`
 }

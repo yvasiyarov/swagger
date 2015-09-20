@@ -54,14 +54,11 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	if err != nil {
 		log.Fatalf("Can not parse general API information: %v\n", err)
 	}
-<<<<<<< HEAD
 
-	parser.Listing.Swagger = Swagger
-=======
 	
 	parser.Listing.BasePath = "{{.}}"
-	parser.Listing.SwaggerVersion = SwaggerVersion
->>>>>>> yvasiyarov/swagger2.0
+	parser.Listing.Swagger = Swagger
+
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
 			for _, commentLine := range strings.Split(comment.Text(), "\n") {
