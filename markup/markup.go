@@ -37,7 +37,7 @@ type Markup interface {
 	colorSpan(content, foregroundColor, backgroundColor string) string
 }
 
-func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string) {
+func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string) error {
 	var filename string
 	if *outputSpec == "" {
 		filename = path.Join("./", "API") + defaultFileExtension
@@ -46,7 +46,7 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 	}
 	fd, err := os.Create(filename)
 	if err != nil {
-		log.Fatalf("Can not create document file: %v\n", err)
+		return fmt.Errorf("Can not create document file: %v\n", err)
 	}
 	defer fd.Close()
 
@@ -164,6 +164,8 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 	}
 
 	fd.WriteString(buf.String())
+
+	return nil
 }
 
 func shortModelName(longModelName string) string {
