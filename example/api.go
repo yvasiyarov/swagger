@@ -1,4 +1,4 @@
-// @SubApi Order management API [/orders]
+// @SubApi Order management
 package example
 
 import (
