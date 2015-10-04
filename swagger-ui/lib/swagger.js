@@ -959,6 +959,11 @@ SwaggerOperation.prototype.urlify = function(args) {
   }
   if ((queryParams != null) && queryParams.length > 0)
     url += '?' + queryParams;
+    
+  if (url.substring(0, 4) != 'http') {
+    return "http://" + document.location.host + url
+  }
+
   return url;
 };
 
