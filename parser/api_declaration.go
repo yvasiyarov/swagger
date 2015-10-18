@@ -2,8 +2,8 @@ package parser
 
 // https://github.com/wordnik/swagger-core/blob/scala_2.10-1.3-RC3/schemas/api-declaration-schema.json
 type ApiDeclaration struct {
-	ApiVersion     string            `json:"apiVersion"`
-	SwaggerVersion string            `json:"swaggerVersion"`
+	Version     string            `json:"version"`
+	Swagger         string            `json:"swagger"`
 	BasePath       string            `json:"basePath"`
 	ResourcePath   string            `json:"resourcePath"` // must start with /
 	Consumes       []string          `json:"-"`

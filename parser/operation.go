@@ -52,8 +52,8 @@ func (operation *Operation) SetItemsType(itemsType string) {
 
 func (operation *Operation) ParseComment(comment string) error {
 	commentLine := strings.TrimSpace(strings.TrimLeft(comment, "//"))
-	if len(commentLine) == 0 {
-		return nil
+	if len(commentLine) == 0 {		
+		return nil		
 	}
 	attribute := strings.Fields(commentLine)[0]
 	switch strings.ToLower(attribute) {

@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-const SwaggerVersion = "1.2"
+const Swagger = "2.0"
 const (
 	ContentTypeJson              = "application/json"
 	ContentTypeXml               = "application/xml"
@@ -16,8 +16,9 @@ const (
 var CommentIsEmptyError = errors.New("Comment is empty")
 
 type ResourceListing struct {
-	ApiVersion     string `json:"apiVersion"`
-	SwaggerVersion string `json:"swaggerVersion"`
+
+	Version     string `json:"version"`
+	Swagger string `json:"swagger"`
 	BasePath       string `json:"basePath,omitempty"`
 	Apis  []*ApiRef  `json:"apis"`
 	Infos Infomation `json:"info"`
@@ -30,6 +31,7 @@ type ApiRef struct {
 
 type Infomation struct {
 	Title             string `json:"title,omitempty"`
+    Version          string `json:"version,omitempty"`
 	Description       string `json:"description,omitempty"`
 	Contact           string `json:"contact,omitempty"`
 	TermsOfServiceUrl string `json:"termsOfServiceUrl,omitempty"`

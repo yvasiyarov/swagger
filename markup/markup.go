@@ -3,12 +3,12 @@ package markup
 import (
 	"bytes"
 	"fmt"
+	"github.com/yvasiyarov/swagger/parser"
+	"log"
 	"os"
 	"path"
 	"sort"
 	"strings"
-
-	"github.com/yvasiyarov/swagger/parser"
 )
 
 const (
@@ -80,7 +80,7 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 		buf.WriteString(markup.tableHeader(""))
 		buf.WriteString(markup.tableHeaderRow("Specification", "Value"))
 		buf.WriteString(markup.tableRow("Resource Path", apiDescription.ResourcePath))
-		buf.WriteString(markup.tableRow("API Version", apiDescription.ApiVersion))
+		buf.WriteString(markup.tableRow("API Version", apiDescription.Version))
 		buf.WriteString(markup.tableRow("BasePath for the API", apiDescription.BasePath))
 		buf.WriteString(markup.tableRow("Consumes", strings.Join(apiDescription.Consumes, ", ")))
 		buf.WriteString(markup.tableRow("Produces", strings.Join(apiDescription.Produces, ", ")))
