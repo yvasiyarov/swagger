@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/yvasiyarov/swagger/markup"
@@ -137,6 +138,9 @@ func Run(params Params) error {
 
 	//Support gopaths with multiple directories
 	dirs := strings.Split(gopath, ":")
+	if runtime.GOOS == "windows" {
+        	dirs = strings.Split(gopath, ";")
+	}
 	found := false
 	for _, d := range dirs {
 		apifile := path.Join(d, "src", params.MainApiFile)
@@ -146,8 +150,12 @@ func Run(params Params) error {
 		}
 	}
 	if found == false {
-		apifile := path.Join(gopath, "src", params.MainApiFile)
-		return fmt.Errorf("Could not find apifile %s to parse\n", apifile)
+		if _, err := os.Stat(params.MainApiFile); err == nil {
+			parser.ParseGeneralApiInfo(params.MainApiFile)
+		} else {
+			apifile := path.Join(gopath, "src", params.MainApiFile)
+			return fmt.Errorf("Could not find apifile %s to parse\n", apifile)
+		}
 	}
 
 	parser.ParseApi(params.ApiPackage)
