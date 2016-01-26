@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"os"
-	//	"fmt"
 	"net/http"
 	"strings"
 	"text/template"
