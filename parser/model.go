@@ -244,6 +244,7 @@ var basicTypes = map[string]bool{
 	"uintptr":    true,
 	"error":      true,
 	"Time":       true,
+	"file":       true,
 }
 
 var typeDefTranslations = map[string]string{}
