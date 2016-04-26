@@ -19,7 +19,7 @@ type ParserSuite struct {
 }
 
 // It must return true if funcDeclaration is controller. We will try to parse only comments before controllers
-func IsController(funcDeclaration *ast.FuncDecl) bool {
+func IsController(funcDeclaration *ast.FuncDecl, controllerClass string) bool {
 	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
 		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
 			receiverName := fmt.Sprint(starExpression.X)
@@ -235,7 +235,7 @@ func (suite *ParserSuite) CheckGetInterface(op *parser.Operation) {
 func (suite *ParserSuite) CheckGetSimpleAliased(op *parser.Operation) {
 	assert.Equal(suite.T(), "GET", op.HttpMethod, "Http method not parsed")
 	assert.Equal(suite.T(), "GetSimpleAliased", op.Nickname, "Nickname not parsed")
-	assert.Equal(suite.T(), "github.com.yvasiyarov.swagger.example.SimpleAlias", op.Type, "Type not parsed")
+	assert.Equal(suite.T(), "string", op.Type, "Type not parsed")
 
 	assert.Equal(suite.T(), op.Path, "/testapi/get-simple-aliased", "Resource path invalid")
 
@@ -245,7 +245,7 @@ func (suite *ParserSuite) CheckGetSimpleAliased(op *parser.Operation) {
 
 	assert.Len(suite.T(), op.Parameters, 0, "Params not parsed")
 	assert.Len(suite.T(), op.ResponseMessages, 3, "Response message not parsed")
-	assert.Len(suite.T(), op.Models, 2, "Models not parsed %#v", op.Models)
+	assert.Len(suite.T(), op.Models, 1, "Models not parsed %#v", op.Models)
 }
 
 func (suite *ParserSuite) CheckGetArrayOfInterfaces(op *parser.Operation) {
@@ -283,15 +283,12 @@ func (suite *ParserSuite) CheckGetStruct3(op *parser.Operation) {
 }
 
 func (suite *ParserSuite) CheckModelList(topApi *parser.ApiDeclaration) {
-	assert.Len(suite.T(), topApi.Models, 7, "Models was not parsed corectly")
+	assert.Len(suite.T(), topApi.Models, 6, "Models was not parsed corectly")
 
 	for _, model := range topApi.Models {
 		switch model.Id {
 		case "github.com.yvasiyarov.swagger.example.APIError":
 			assert.Len(suite.T(), model.Properties, 2, "Model not parsed correctly")
-
-		case "github.com.yvasiyarov.swagger.example.SimpleAlias":
-			assert.Len(suite.T(), model.Properties, 0, "Model not parsed correctly")
 
 		case "github.com.yvasiyarov.swagger.example.InterfaceType":
 			assert.Len(suite.T(), model.Properties, 0, "Model not parsed correctly")

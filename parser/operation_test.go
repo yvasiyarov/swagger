@@ -32,16 +32,21 @@ func (suite *OperationSuite) TestSetItemsType() {
 	assert.Equal(suite.T(), op2.Items.Ref, "SomeType", "Can no set item type to custom type")
 }
 
-func (suite *OperationSuite) TestParseAcceptComment() {
+func (suite *OperationSuite) TestParseAcceptAndProduceComment() {
 	op := parser.NewOperation(suite.parser, "test")
-	err := op.ParseAcceptComment("@Accept json")
-	assert.Nil(suite.T(), err, "can not parse accept comment")
+	errAccept := op.ParseAcceptComment("json")
+	errProduce := op.ParseProduceComment("json")
+
+	assert.Nil(suite.T(), errAccept, "can not parse accept comment")
+	assert.Nil(suite.T(), errProduce, "can not parse produce comment")
 	assert.Equal(suite.T(), op.Consumes, []string{parser.ContentTypeJson}, "Can no parse accept comment")
 	assert.Equal(suite.T(), op.Produces, []string{parser.ContentTypeJson}, "Can no parse accept comment")
 
 	op2 := parser.NewOperation(suite.parser, "test")
-	err2 := op2.ParseAcceptComment("@Accept json,html,plain,xml")
-	assert.Nil(suite.T(), err2, "Can not parse accept comment with multiple types")
+	errAccept2 := op2.ParseAcceptComment("json,html,plain,xml")
+	errProduce2 := op2.ParseProduceComment("json,html,plain,xml")
+	assert.Nil(suite.T(), errAccept2, "Can not parse accept comment with multiple types")
+	assert.Nil(suite.T(), errProduce2, "Can not parse produce comment with multiple types")
 
 	expected := []string{parser.ContentTypeJson, parser.ContentTypeHtml, parser.ContentTypePlain, parser.ContentTypeXml}
 	assert.Equal(suite.T(), op2.Consumes, expected, "Can not parse accept comment with multiple types")
@@ -64,7 +69,7 @@ func (suite *OperationSuite) TestParseRouterComment() {
 
 func (suite *OperationSuite) TestParseParamComment() {
 	op := parser.NewOperation(suite.parser, "test")
-	err := op.ParseParamComment("@Param   order_nr     path    string  true	\"Order number\"")
+	err := op.ParseParamComment("order_nr     path    string  true	\"Order number\"")
 	assert.Nil(suite.T(), err, "Can not parse param comment")
 	assert.Len(suite.T(), op.Parameters, 1, "Can not parse param comment")
 
@@ -111,6 +116,7 @@ func (suite *OperationSuite) TestParseComment() {
 // @Title getOrderByNumber
 // @Description Return order by order number
 // @Accept  json
+// @Produce json
 // @Param   order_nr     path    string  true	"Order number"
 // @Success 200 {array}  int
 // @Failure 400 {simple} string     "Order ID must be specified"
