@@ -54,7 +54,7 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	if err != nil {
 		log.Fatalf("Can not parse general API information: %v\n", err)
 	}
-	
+
 	parser.Listing.SwaggerVersion = SwaggerVersion
 	if fileTree.Comments != nil {
 		for _, comment := range fileTree.Comments {
@@ -120,6 +120,12 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 				pkgRealpath = evalutedPath
 				break
 			}
+			// added this check to see if file was in vendor folder
+		} else if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(path, "src", basePackageName, "vendor", packagePath)); err == nil {
+			if _, err := os.Stat(evalutedPath); err == nil {
+				pkgRealpath = evalutedPath
+				break
+			}
 		}
 	}
 
@@ -150,9 +156,10 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 
 func (parser *Parser) GetRealPackagePath(packagePath string) string {
 	pkgRealpath := parser.CheckRealPackagePath(packagePath)
-	if pkgRealpath == "" {
+	//don't throw error, was having issues with golang 1.7 compiler reference in /golang.org/pkg/crypto/md5/
+	/*if pkgRealpath == "" {
 		log.Fatalf("Can not find package %s \n", packagePath)
-	}
+	}*/
 
 	return pkgRealpath
 }
@@ -166,7 +173,9 @@ func (parser *Parser) GetPackageAst(packagePath string) map[string]*ast.Package 
 
 		astPackages, err := goparser.ParseDir(fileSet, packagePath, ParserFileFilter, goparser.ParseComments)
 		if err != nil {
-			log.Fatalf("Parse of %s pkg cause error: %s\n", packagePath, err)
+			return astPackages
+			//don't throw error, was having issues with golang 1.7 compiler reference in /golang.org/pkg/crypto/md5/
+			//log.Fatalf("Parse of %s pkg cause error: %s\n", packagePath, err)
 		}
 		parser.PackagesCache[packagePath] = astPackages
 		return astPackages
@@ -219,7 +228,11 @@ func (parser *Parser) AddOperation(op *Operation) {
 	api.AddOperation(op)
 }
 
+var basePackageName string
+
 func (parser *Parser) ParseApi(packageNames string) {
+	//assuming passed package is basePackageName to using for vendoring checks
+	basePackageName = packageNames
 	packages := parser.ScanPackages(strings.Split(packageNames, ","))
 	for _, packageName := range packages {
 		parser.ParseTypeDefinitions(packageName)
