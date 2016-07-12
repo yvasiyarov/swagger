@@ -13,8 +13,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/yvasiyarov/swagger/markup"
-	"github.com/yvasiyarov/swagger/parser"
+	"github.com/boonep/swagger/markup"
+	"github.com/boonep/swagger/parser"
 )
 
 const (
@@ -133,7 +133,6 @@ func Run(params Params) error {
 	if gopath == "" {
 		return errors.New("Please, set $GOPATH environment variable\n")
 	}
-
 	log.Println("Start parsing")
 
 	//Support gopaths with multiple directories
