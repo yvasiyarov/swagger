@@ -54,7 +54,7 @@ func (parser *Parser) ParseGeneralApiInfo(mainApiFile string) {
 	if err != nil {
 		log.Fatalf("Can not parse general API information: %v\n", err)
 	}
-	
+
 	parser.Listing.BasePath = "{{.}}"
 	parser.Listing.SwaggerVersion = SwaggerVersion
 	if fileTree.Comments != nil {
@@ -107,19 +107,31 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 		return cachedResult
 	}
 
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		log.Fatalf("Please, set $GOPATH environment variable\n")
-	}
-
-	// first check GOPATH
+	// first check vendor folder
 	pkgRealpath := ""
-	gopathsList := filepath.SplitList(gopath)
-	for _, path := range gopathsList {
-		if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(path, "src", packagePath)); err == nil {
+	vendoringEnabled := os.Getenv("GO15VENDOREXPERIMENT")
+	if vendoringEnabled == "1" {
+		if evalutedPath, err := filepath.EvalSymlinks(filepath.Join("vendor", packagePath)); err == nil {
 			if _, err := os.Stat(evalutedPath); err == nil {
 				pkgRealpath = evalutedPath
-				break
+			}
+		}
+	}
+
+	// next, check GOPATH
+	if pkgRealpath == "" {
+		gopath := os.Getenv("GOPATH")
+		if gopath == "" {
+			log.Fatalf("Please, set $GOPATH environment variable\n")
+		}
+
+		gopathsList := filepath.SplitList(gopath)
+		for _, path := range gopathsList {
+			if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(path, "src", packagePath)); err == nil {
+				if _, err := os.Stat(evalutedPath); err == nil {
+					pkgRealpath = evalutedPath
+					break
+				}
 			}
 		}
 	}
@@ -145,6 +157,7 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 			}
 		}
 	}
+
 	parser.PackagePathCache[packagePath] = pkgRealpath
 	return pkgRealpath
 }
