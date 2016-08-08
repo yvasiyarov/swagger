@@ -143,9 +143,11 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 		/***************************************************************
 		* Models
 		***************************************************************/
-		buf.WriteString("\n")
-		buf.WriteString(markup.sectionHeader(3, "Models"))
-		buf.WriteString("\n")
+		if len(apiDescription.Models) > 0 {
+			buf.WriteString("\n")
+			buf.WriteString(markup.sectionHeader(3, "Models"))
+			buf.WriteString("\n")
+		}
 
 		for _, modelKey := range alphabeticalKeysOfModels(apiDescription.Models) {
 			model := apiDescription.Models[modelKey]
