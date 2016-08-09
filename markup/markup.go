@@ -37,7 +37,7 @@ type Markup interface {
 	colorSpan(content, foregroundColor, backgroundColor string) string
 }
 
-func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string) error {
+func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string, tableContents bool) error {
 	var filename string
 	if *outputSpec == "" {
 		filename = path.Join("./", "API") + defaultFileExtension
@@ -61,12 +61,14 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 	/***************************************************************
 	* Table of Contents (List of Sub-APIs)
 	***************************************************************/
-	buf.WriteString("Table of Contents\n\n")
-	subApiKeys, subApiKeyIndex := alphabeticalKeysOfSubApis(parser.Listing.Apis)
-	for _, subApiKey := range subApiKeys {
-		buf.WriteString(markup.numberedItem(1, markup.link(subApiKey, parser.Listing.Apis[subApiKeyIndex[subApiKey]].Description)))
+	if tableContents {
+		buf.WriteString("Table of Contents\n\n")
+		subApiKeys, subApiKeyIndex := alphabeticalKeysOfSubApis(parser.Listing.Apis)
+		for _, subApiKey := range subApiKeys {
+			buf.WriteString(markup.numberedItem(1, markup.link(subApiKey, parser.Listing.Apis[subApiKeyIndex[subApiKey]].Description)))
+		}
+		buf.WriteString("\n")
 	}
-	buf.WriteString("\n")
 
 	for _, apiKey := range alphabeticalKeysOfApiDeclaration(parser.TopLevelApis) {
 

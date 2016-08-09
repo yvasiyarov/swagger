@@ -125,6 +125,7 @@ func InitParser(controllerClass, ignore string) *parser.Parser {
 
 type Params struct {
 	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass, Ignore string
+	ContentsTable bool
 }
 
 func Run(params Params) error {
@@ -169,13 +170,13 @@ func Run(params Params) error {
 		err = generateSwaggerDocs(parser, params.OutputSpec)
 		confirmMsg = "Doc file generated"
 	case "asciidoc":
-		err = markup.GenerateMarkup(parser, new(markup.MarkupAsciiDoc), &params.OutputSpec, ".adoc")
+		err = markup.GenerateMarkup(parser, new(markup.MarkupAsciiDoc), &params.OutputSpec, ".adoc", params.ContentsTable)
 		confirmMsg = "AsciiDoc file generated"
 	case "markdown":
-		err = markup.GenerateMarkup(parser, new(markup.MarkupMarkDown), &params.OutputSpec, ".md")
+		err = markup.GenerateMarkup(parser, new(markup.MarkupMarkDown), &params.OutputSpec, ".md", params.ContentsTable)
 		confirmMsg = "MarkDown file generated"
 	case "confluence":
-		err = markup.GenerateMarkup(parser, new(markup.MarkupConfluence), &params.OutputSpec, ".confluence")
+		err = markup.GenerateMarkup(parser, new(markup.MarkupConfluence), &params.OutputSpec, ".confluence", params.ContentsTable)
 		confirmMsg = "Confluence file generated"
 	case "swagger":
 		err = generateSwaggerUiFiles(parser, params.OutputSpec)
