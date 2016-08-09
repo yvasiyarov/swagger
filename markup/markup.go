@@ -76,7 +76,9 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 		/***************************************************************
 		* Sub-API Specifications
 		***************************************************************/
-		buf.WriteString(markup.anchor(apiKey))
+		if tableContents {
+			buf.WriteString(markup.anchor(apiKey))
+		}
 		buf.WriteString(markup.sectionHeader(2, markup.colorSpan(apiKey, color_API_SECTION_HEADER_TEXT, color_NORMAL_BACKGROUND)))
 
 		buf.WriteString(markup.tableHeader(""))
@@ -113,7 +115,9 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 			for _, op := range subapi.Operations {
 				buf.WriteString("\n")
 				operationString := fmt.Sprintf("%s (%s)", strings.Replace(strings.Replace(subapi.Path, "{", "\\{", -1), "}", "\\}", -1), op.HttpMethod)
-				buf.WriteString(markup.anchor(op.Nickname))
+				if tableContents {
+					buf.WriteString(markup.anchor(op.Nickname))
+				}
 				buf.WriteString(markup.sectionHeader(4, markup.colorSpan("API: "+operationString, color_NORMAL_TEXT, operationColor(op.HttpMethod))))
 				buf.WriteString("\n\n" + op.Summary + "\n\n\n")
 
@@ -153,7 +157,9 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 
 		for _, modelKey := range alphabeticalKeysOfModels(apiDescription.Models) {
 			model := apiDescription.Models[modelKey]
-			buf.WriteString(markup.anchor(modelKey))
+			if tableContents {
+				buf.WriteString(markup.anchor(modelKey))
+			}
 			buf.WriteString(markup.sectionHeader(4, markup.colorSpan(shortModelName(modelKey), color_MODEL_TEXT, color_NORMAL_BACKGROUND)))
 			buf.WriteString(markup.tableHeader(""))
 			buf.WriteString(markup.tableHeaderRow("Field Name (alphabetical)", "Field Type", "Description"))
