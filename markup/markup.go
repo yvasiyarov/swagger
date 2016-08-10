@@ -37,7 +37,7 @@ type Markup interface {
 	colorSpan(content, foregroundColor, backgroundColor string) string
 }
 
-func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string, tableContents bool) error {
+func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string, tableContents bool, models bool) error {
 	var filename string
 	if *outputSpec == "" {
 		filename = path.Join("./", "API") + defaultFileExtension
@@ -149,28 +149,26 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 		/***************************************************************
 		* Models
 		***************************************************************/
-		if len(apiDescription.Models) > 0 {
+		if len(apiDescription.Models) > 0 && models {
 			buf.WriteString("\n")
 			buf.WriteString(markup.sectionHeader(3, "Models"))
 			buf.WriteString("\n")
-		}
-
-		for _, modelKey := range alphabeticalKeysOfModels(apiDescription.Models) {
-			model := apiDescription.Models[modelKey]
-			if tableContents {
-				buf.WriteString(markup.anchor(modelKey))
+			for _, modelKey := range alphabeticalKeysOfModels(apiDescription.Models) {
+				model := apiDescription.Models[modelKey]
+				if tableContents {
+					buf.WriteString(markup.anchor(modelKey))
+				}
+				buf.WriteString(markup.sectionHeader(4, markup.colorSpan(shortModelName(modelKey), color_MODEL_TEXT, color_NORMAL_BACKGROUND)))
+				buf.WriteString(markup.tableHeader(""))
+				buf.WriteString(markup.tableHeaderRow("Field Name (alphabetical)", "Field Type", "Description"))
+				for _, fieldName := range alphabeticalKeysOfFields(model.Properties) {
+					fieldProps := model.Properties[fieldName]
+					buf.WriteString(markup.tableRow(fieldName, fieldProps.Type, fieldProps.Description))
+				}
+				buf.WriteString(markup.tableFooter())
 			}
-			buf.WriteString(markup.sectionHeader(4, markup.colorSpan(shortModelName(modelKey), color_MODEL_TEXT, color_NORMAL_BACKGROUND)))
-			buf.WriteString(markup.tableHeader(""))
-			buf.WriteString(markup.tableHeaderRow("Field Name (alphabetical)", "Field Type", "Description"))
-			for _, fieldName := range alphabeticalKeysOfFields(model.Properties) {
-				fieldProps := model.Properties[fieldName]
-				buf.WriteString(markup.tableRow(fieldName, fieldProps.Type, fieldProps.Description))
-			}
-			buf.WriteString(markup.tableFooter())
+			buf.WriteString("\n")
 		}
-		buf.WriteString("\n")
-
 	}
 
 	fd.WriteString(buf.String())

@@ -14,6 +14,7 @@ var outputSpec = flag.String("output", "", "Output (path) for the generated file
 var controllerClass = flag.String("controllerClass", "", "Speed up parsing by specifying which receiver objects have the controller methods")
 var ignore = flag.String("ignore", "^$", "Ignore packages that satisfy this match")
 var contentsTable = flag.Bool("contentsTable", true, "Generate the section Table of Contents")
+var models = flag.Bool("models", true, "Generate the section models if any defined")
 
 func main() {
 	flag.Parse()
@@ -35,6 +36,7 @@ func main() {
 		ControllerClass: *controllerClass,
 		Ignore:          *ignore,
 		ContentsTable:	 *contentsTable,
+		Models:		 *models,
 	}
 
 	err := generator.Run(params)
