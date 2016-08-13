@@ -37,7 +37,7 @@ type Markup interface {
 	colorSpan(content, foregroundColor, backgroundColor string) string
 }
 
-func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string) error {
+func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, defaultFileExtension string, tableContents bool, models bool) error {
 	var filename string
 	if *outputSpec == "" {
 		filename = path.Join("./", "API") + defaultFileExtension
@@ -61,12 +61,14 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 	/***************************************************************
 	* Table of Contents (List of Sub-APIs)
 	***************************************************************/
-	buf.WriteString("Table of Contents\n\n")
-	subApiKeys, subApiKeyIndex := alphabeticalKeysOfSubApis(parser.Listing.Apis)
-	for _, subApiKey := range subApiKeys {
-		buf.WriteString(markup.numberedItem(1, markup.link(subApiKey, parser.Listing.Apis[subApiKeyIndex[subApiKey]].Description)))
+	if tableContents {
+		buf.WriteString("Table of Contents\n\n")
+		subApiKeys, subApiKeyIndex := alphabeticalKeysOfSubApis(parser.Listing.Apis)
+		for _, subApiKey := range subApiKeys {
+			buf.WriteString(markup.numberedItem(1, markup.link(subApiKey, parser.Listing.Apis[subApiKeyIndex[subApiKey]].Description)))
+		}
+		buf.WriteString("\n")
 	}
-	buf.WriteString("\n")
 
 	for _, apiKey := range alphabeticalKeysOfApiDeclaration(parser.TopLevelApis) {
 
@@ -74,7 +76,9 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 		/***************************************************************
 		* Sub-API Specifications
 		***************************************************************/
-		buf.WriteString(markup.anchor(apiKey))
+		if tableContents {
+			buf.WriteString(markup.anchor(apiKey))
+		}
 		buf.WriteString(markup.sectionHeader(2, markup.colorSpan(apiKey, color_API_SECTION_HEADER_TEXT, color_NORMAL_BACKGROUND)))
 
 		buf.WriteString(markup.tableHeader(""))
@@ -111,7 +115,9 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 			for _, op := range subapi.Operations {
 				buf.WriteString("\n")
 				operationString := fmt.Sprintf("%s (%s)", strings.Replace(strings.Replace(subapi.Path, "{", "\\{", -1), "}", "\\}", -1), op.HttpMethod)
-				buf.WriteString(markup.anchor(op.Nickname))
+				if tableContents {
+					buf.WriteString(markup.anchor(op.Nickname))
+				}
 				buf.WriteString(markup.sectionHeader(4, markup.colorSpan("API: "+operationString, color_NORMAL_TEXT, operationColor(op.HttpMethod))))
 				buf.WriteString("\n\n" + op.Summary + "\n\n\n")
 
@@ -143,24 +149,26 @@ func GenerateMarkup(parser *parser.Parser, markup Markup, outputSpec *string, de
 		/***************************************************************
 		* Models
 		***************************************************************/
-		buf.WriteString("\n")
-		buf.WriteString(markup.sectionHeader(3, "Models"))
-		buf.WriteString("\n")
-
-		for _, modelKey := range alphabeticalKeysOfModels(apiDescription.Models) {
-			model := apiDescription.Models[modelKey]
-			buf.WriteString(markup.anchor(modelKey))
-			buf.WriteString(markup.sectionHeader(4, markup.colorSpan(shortModelName(modelKey), color_MODEL_TEXT, color_NORMAL_BACKGROUND)))
-			buf.WriteString(markup.tableHeader(""))
-			buf.WriteString(markup.tableHeaderRow("Field Name (alphabetical)", "Field Type", "Description"))
-			for _, fieldName := range alphabeticalKeysOfFields(model.Properties) {
-				fieldProps := model.Properties[fieldName]
-				buf.WriteString(markup.tableRow(fieldName, fieldProps.Type, fieldProps.Description))
+		if len(apiDescription.Models) > 0 && models {
+			buf.WriteString("\n")
+			buf.WriteString(markup.sectionHeader(3, "Models"))
+			buf.WriteString("\n")
+			for _, modelKey := range alphabeticalKeysOfModels(apiDescription.Models) {
+				model := apiDescription.Models[modelKey]
+				if tableContents {
+					buf.WriteString(markup.anchor(modelKey))
+				}
+				buf.WriteString(markup.sectionHeader(4, markup.colorSpan(shortModelName(modelKey), color_MODEL_TEXT, color_NORMAL_BACKGROUND)))
+				buf.WriteString(markup.tableHeader(""))
+				buf.WriteString(markup.tableHeaderRow("Field Name (alphabetical)", "Field Type", "Description"))
+				for _, fieldName := range alphabeticalKeysOfFields(model.Properties) {
+					fieldProps := model.Properties[fieldName]
+					buf.WriteString(markup.tableRow(fieldName, fieldProps.Type, fieldProps.Description))
+				}
+				buf.WriteString(markup.tableFooter())
 			}
-			buf.WriteString(markup.tableFooter())
+			buf.WriteString("\n")
 		}
-		buf.WriteString("\n")
-
 	}
 
 	fd.WriteString(buf.String())
