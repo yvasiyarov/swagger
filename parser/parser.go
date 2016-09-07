@@ -107,6 +107,11 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 		return cachedResult
 	}
 
+	// Hack vendoring of 'golang.org/x' by the standard library
+	if strings.HasPrefix(packagePath, "golang_org/x/") {
+		packagePath = filepath.Join("vendor", packagePath)
+	}
+
 	// first check vendor folder
 	pkgRealpath := ""
 	vendoringEnabled := os.Getenv("GO15VENDOREXPERIMENT")
