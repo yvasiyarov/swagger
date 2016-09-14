@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	AVAILABLE_FORMATS = "go|swagger|asciidoc|markdown|confluence"
+	AVAILABLE_FORMATS = "go|gopkg|swagger|asciidoc|markdown|confluence"
 )
 
 var generatedFileTemplate = `
@@ -27,6 +27,14 @@ package main
 
 var resourceListingJson = {{resourceListing}}
 var apiDescriptionsJson = {{apiDescriptions}}
+`
+
+var generatedPkgTemplate = `
+package {{packageName}}
+//This file is generated automatically. Do not try to edit it manually.
+
+var ResourceListingJson = {{resourceListing}}
+var ApiDescriptionsJson = {{apiDescriptions}}
 `
 
 // It must return true if funcDeclaration is controller. We will try to parse only comments before controllers
@@ -48,7 +56,7 @@ func IsController(funcDeclaration *ast.FuncDecl, controllerClass string) bool {
 	return false
 }
 
-func generateSwaggerDocs(parser *parser.Parser, outputSpec string) error {
+func generateSwaggerDocs(parser *parser.Parser, outputSpec string, pkg bool) error {
 	fd, err := os.Create(path.Join(outputSpec, "docs.go"))
 	if err != nil {
 		return fmt.Errorf("Can not create document file: %v\n", err)
@@ -68,8 +76,16 @@ func generateSwaggerDocs(parser *parser.Parser, outputSpec string) error {
 		apiDescriptions.WriteString("`,")
 	}
 
-	doc := strings.Replace(generatedFileTemplate, "{{resourceListing}}", "`"+string(parser.GetResourceListingJson())+"`", -1)
-	doc = strings.Replace(doc, "{{apiDescriptions}}", "map[string]string{"+apiDescriptions.String()+"}", -1)
+	var doc string
+	if pkg {
+		doc := strings.Replace(generatedPkgTemplate, "{{resourceListing}}", "`"+string(parser.GetResourceListingJson())+"`", -1)
+		doc = strings.Replace(doc, "{{apiDescriptions}}", "map[string]string{"+apiDescriptions.String()+"}", -1)
+		packageName := strings.Split(outputSpec, "/")
+		doc = strings.Replace(doc, "{{packageName}}", packageName[len(packageName)-1], -1)
+	} else {
+		doc := strings.Replace(generatedFileTemplate, "{{resourceListing}}", "`"+string(parser.GetResourceListingJson())+"`", -1)
+		doc = strings.Replace(doc, "{{apiDescriptions}}", "map[string]string{"+apiDescriptions.String()+"}", -1)
+	}
 
 	fd.WriteString(doc)
 
@@ -125,7 +141,7 @@ func InitParser(controllerClass, ignore string) *parser.Parser {
 
 type Params struct {
 	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass, Ignore string
-	ContentsTable, Models bool
+	ContentsTable, Models                                                      bool
 }
 
 func Run(params Params) error {
@@ -140,7 +156,7 @@ func Run(params Params) error {
 	//Support gopaths with multiple directories
 	dirs := strings.Split(gopath, ":")
 	if runtime.GOOS == "windows" {
-        	dirs = strings.Split(gopath, ";")
+		dirs = strings.Split(gopath, ";")
 	}
 	found := false
 	for _, d := range dirs {
@@ -167,8 +183,11 @@ func Run(params Params) error {
 	format := strings.ToLower(params.OutputFormat)
 	switch format {
 	case "go":
-		err = generateSwaggerDocs(parser, params.OutputSpec)
+		err = generateSwaggerDocs(parser, params.OutputSpec, false)
 		confirmMsg = "Doc file generated"
+	case "gopkg":
+		err = generateSwaggerDocs(parser, params.OutputSpec, true)
+		confirmMsg = "Doc package generated"
 	case "asciidoc":
 		err = markup.GenerateMarkup(parser, new(markup.MarkupAsciiDoc), &params.OutputSpec, ".adoc", params.ContentsTable, params.Models)
 		confirmMsg = "AsciiDoc file generated"
