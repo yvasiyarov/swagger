@@ -78,12 +78,12 @@ func generateSwaggerDocs(parser *parser.Parser, outputSpec string, pkg bool) err
 
 	var doc string
 	if pkg {
-		doc := strings.Replace(generatedPkgTemplate, "{{resourceListing}}", "`"+string(parser.GetResourceListingJson())+"`", -1)
+		doc = strings.Replace(generatedPkgTemplate, "{{resourceListing}}", "`"+string(parser.GetResourceListingJson())+"`", -1)
 		doc = strings.Replace(doc, "{{apiDescriptions}}", "map[string]string{"+apiDescriptions.String()+"}", -1)
 		packageName := strings.Split(outputSpec, "/")
 		doc = strings.Replace(doc, "{{packageName}}", packageName[len(packageName)-1], -1)
 	} else {
-		doc := strings.Replace(generatedFileTemplate, "{{resourceListing}}", "`"+string(parser.GetResourceListingJson())+"`", -1)
+		doc = strings.Replace(generatedFileTemplate, "{{resourceListing}}", "`"+string(parser.GetResourceListingJson())+"`", -1)
 		doc = strings.Replace(doc, "{{apiDescriptions}}", "map[string]string{"+apiDescriptions.String()+"}", -1)
 	}
 

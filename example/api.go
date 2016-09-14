@@ -147,9 +147,9 @@ func InitRouter() *web.Router {
 		Middleware(web.LoggerMiddleware).
 		Middleware(web.ShowErrorsMiddleware).
 		Middleware(func(c *Context, rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
-		resultJSON, _ := json.Marshal(c.response)
-		rw.Write(resultJSON)
-	}).
+			resultJSON, _ := json.Marshal(c.response)
+			rw.Write(resultJSON)
+		}).
 		Get("/testapi/get-string-by-int/{some_id}", (*Context).GetStringByInt).
 		Get("/testapi/get-struct-by-int/{some_id}", (*Context).GetStructByInt).
 		Get("/testapi/get-simple-array-by-string/{some_id}", (*Context).GetSimpleArrayByString).

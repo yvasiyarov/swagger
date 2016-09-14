@@ -35,8 +35,8 @@ func main() {
 		OutputSpec:      *outputSpec,
 		ControllerClass: *controllerClass,
 		Ignore:          *ignore,
-		ContentsTable:	 *contentsTable,
-		Models:		 *models,
+		ContentsTable:   *contentsTable,
+		Models:          *models,
 	}
 
 	err := generator.Run(params)

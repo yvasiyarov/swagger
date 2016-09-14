@@ -16,11 +16,11 @@ const (
 var CommentIsEmptyError = errors.New("Comment is empty")
 
 type ResourceListing struct {
-	ApiVersion     string `json:"apiVersion"`
-	SwaggerVersion string `json:"swaggerVersion"`
-	BasePath       string `json:"basePath,omitempty"`
-	Apis  []*ApiRef  `json:"apis"`
-	Infos Infomation `json:"info"`
+	ApiVersion     string     `json:"apiVersion"`
+	SwaggerVersion string     `json:"swaggerVersion"`
+	BasePath       string     `json:"basePath,omitempty"`
+	Apis           []*ApiRef  `json:"apis"`
+	Infos          Infomation `json:"info"`
 }
 
 type ApiRef struct {
