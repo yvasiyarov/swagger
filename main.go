@@ -15,6 +15,7 @@ var controllerClass = flag.String("controllerClass", "", "Speed up parsing by sp
 var ignore = flag.String("ignore", "^$", "Ignore packages that satisfy this match")
 var contentsTable = flag.Bool("contentsTable", true, "Generate the section Table of Contents")
 var models = flag.Bool("models", true, "Generate the section models if any defined")
+var vendoringPath = flag.String("vendoringPath", "", "Directory of vendoring if used")
 
 func main() {
 	flag.Parse()
@@ -37,6 +38,7 @@ func main() {
 		Ignore:          *ignore,
 		ContentsTable:   *contentsTable,
 		Models:          *models,
+		VendoringPath:	 *vendoringPath,
 	}
 
 	err := generator.Run(params)

@@ -140,7 +140,7 @@ func InitParser(controllerClass, ignore string) *parser.Parser {
 }
 
 type Params struct {
-	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass, Ignore string
+	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass, Ignore, VendoringPath string
 	ContentsTable, Models                                                      bool
 }
 
@@ -175,7 +175,7 @@ func Run(params Params) error {
 		}
 	}
 
-	parser.ParseApi(params.ApiPackage)
+	parser.ParseApi(params.ApiPackage, params.VendoringPath)
 	log.Println("Finish parsing")
 
 	var err error

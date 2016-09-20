@@ -11,7 +11,10 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"fmt"
 )
+
+var vendoringPath string
 
 type Parser struct {
 	Listing                           *ResourceListing
@@ -116,7 +119,16 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 	pkgRealpath := ""
 	vendoringEnabled := os.Getenv("GO15VENDOREXPERIMENT")
 	if vendoringEnabled == "1" {
-		if evalutedPath, err := filepath.EvalSymlinks(filepath.Join("vendor", packagePath)); err == nil {
+		// evaluate if the user specified a different vendor directory rather
+		// than using current working directory to find vendor
+		var vendorPath string
+		if vendoringPath == "" {
+			vendorPath = filepath.Join("vendor", packagePath)
+		} else {
+			vendorPath = fmt.Sprintf("%s/%s", vendoringPath, packagePath)
+		}
+
+		if evalutedPath, err := filepath.EvalSymlinks(vendorPath); err == nil {
 			if _, err := os.Stat(evalutedPath); err == nil {
 				pkgRealpath = evalutedPath
 			}
@@ -234,7 +246,8 @@ func (parser *Parser) AddOperation(op *Operation) {
 	api.AddOperation(op)
 }
 
-func (parser *Parser) ParseApi(packageNames string) {
+func (parser *Parser) ParseApi(packageNames, vendorPath string) {
+	vendoringPath = vendorPath
 	packages := parser.ScanPackages(strings.Split(packageNames, ","))
 	for _, packageName := range packages {
 		parser.ParseTypeDefinitions(packageName)

@@ -47,6 +47,7 @@ The main difference between this tool and Beego is that this generator doesn't d
     * **-controllerClass**  - Speed up parsing by specifying which receiver objects have the controller methods. The default is to search all methods. The argument can be a regular expression. For example, `-controllerClass="(Context|Controller)$"` means the receiver name must end in Context or Controller.
     * **-contentsTable**       - Generate 'Table of Contents' section, default value is true, if set '-contentsTable=false' it will not generate the section.
     * **-models**       - Generate 'Models' section, default value is true, if set '-models=false' it will not generate the section.
+    * **-vendoringPath** - Specify the vendoring directory instead of using current working directory
 
  [**You can Generate different formats** ](https://github.com/yvasiyarov/swagger/wiki/Generate-Different-Formats)
 
