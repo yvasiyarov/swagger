@@ -257,7 +257,8 @@ func (parser *Parser) ScanPackages(packages []string) []string {
 			pkgRealPath := parser.GetRealPackagePath(packageName)
 			// Then walk
 			var walker filepath.WalkFunc = func(path string, info os.FileInfo, err error) error {
-				if info.IsDir() {
+				// avoid listing hidden directories with initial "_" names and vendor dir
+				if info.IsDir() && !strings.Contains(path, "/_") && !strings.Contains(path, "/vendor") {
 					if idx := strings.Index(path, packageName); idx != -1 {
 						pack := path[idx:]
 						if v, ok := existsPackages[pack]; !ok || v == false {
