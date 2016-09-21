@@ -115,12 +115,21 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 		packagePath = filepath.Join("vendor", packagePath)
 	}
 
-	// first check vendor folder
 	pkgRealpath := ""
-	vendoringEnabled := os.Getenv("GO15VENDOREXPERIMENT")
-	if vendoringEnabled == "1" {
-		// evaluate if the user specified a different vendor directory rather
-		// than using current working directory to find vendor
+	goVersion := runtime.Version()
+	// check if vendor is enabled for version GO 1.5 or 1.6
+	vendorEnable := true
+	if goVersion == "go1.5" || goVersion == "go1.6" {
+		if os.Getenv("GO15VENDOREXPERIMENT") == "0" {
+			vendorEnable = false
+		}
+	}
+
+
+	// first check vendor folder, vendoring in GO 1.7 and greater is officially supported
+	// evaluate if the user specified a different vendor directory rather
+	// than using current working directory to find vendor
+	if vendorEnable {
 		var vendorPath string
 		if vendoringPath == "" {
 			vendorPath = filepath.Join("vendor", packagePath)
