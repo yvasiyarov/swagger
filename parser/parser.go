@@ -11,7 +11,10 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"fmt"
 )
+
+var vendoringPath string
 
 type Parser struct {
 	Listing                           *ResourceListing
@@ -112,11 +115,29 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 		packagePath = filepath.Join("vendor", packagePath)
 	}
 
-	// first check vendor folder
 	pkgRealpath := ""
-	vendoringEnabled := os.Getenv("GO15VENDOREXPERIMENT")
-	if vendoringEnabled == "1" {
-		if evalutedPath, err := filepath.EvalSymlinks(filepath.Join("vendor", packagePath)); err == nil {
+	goVersion := runtime.Version()
+	// check if vendor is enabled for version GO 1.5 or 1.6
+	vendorEnable := true
+	if goVersion == "go1.5" || goVersion == "go1.6" {
+		if os.Getenv("GO15VENDOREXPERIMENT") == "0" {
+			vendorEnable = false
+		}
+	}
+
+
+	// first check vendor folder, vendoring in GO 1.7 and greater is officially supported
+	// evaluate if the user specified a different vendor directory rather
+	// than using current working directory to find vendor
+	if vendorEnable {
+		var vendorPath string
+		if vendoringPath == "" {
+			vendorPath = filepath.Join("vendor", packagePath)
+		} else {
+			vendorPath = fmt.Sprintf("%s/%s", vendoringPath, packagePath)
+		}
+
+		if evalutedPath, err := filepath.EvalSymlinks(vendorPath); err == nil {
 			if _, err := os.Stat(evalutedPath); err == nil {
 				pkgRealpath = evalutedPath
 			}
@@ -234,7 +255,8 @@ func (parser *Parser) AddOperation(op *Operation) {
 	api.AddOperation(op)
 }
 
-func (parser *Parser) ParseApi(packageNames string) {
+func (parser *Parser) ParseApi(packageNames, vendorPath string) {
+	vendoringPath = vendorPath
 	packages := parser.ScanPackages(strings.Split(packageNames, ","))
 	for _, packageName := range packages {
 		parser.ParseTypeDefinitions(packageName)
@@ -257,7 +279,8 @@ func (parser *Parser) ScanPackages(packages []string) []string {
 			pkgRealPath := parser.GetRealPackagePath(packageName)
 			// Then walk
 			var walker filepath.WalkFunc = func(path string, info os.FileInfo, err error) error {
-				if info.IsDir() {
+				// avoid listing hidden directories with initial "_" names and vendor dir
+				if info.IsDir() && !strings.Contains(path, "/_") && !strings.Contains(path, "/vendor") {
 					if idx := strings.Index(path, packageName); idx != -1 {
 						pack := path[idx:]
 						if v, ok := existsPackages[pack]; !ok || v == false {
