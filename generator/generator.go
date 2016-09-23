@@ -164,6 +164,7 @@ func Run(params Params) error {
 		if _, err := os.Stat(apifile); err == nil {
 			parser.ParseGeneralApiInfo(apifile)
 			found = true
+			break // file found, exit the loop
 		}
 	}
 	if found == false {
