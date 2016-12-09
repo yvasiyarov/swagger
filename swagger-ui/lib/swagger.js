@@ -347,6 +347,10 @@ var SwaggerResource = function(resourceObj, api) {
     } else {
       this.url = this.api.basePath + this.path.replace('{format}', 'json');
     }
+    if (this.url.substring(0, 4) != 'http') {
+      this.url =  "http://" + document.location.host + this.url
+    }
+    
     this.api.progress('fetching resource ' + this.name + ': ' + this.url);
     obj = {
       url: this.url,
@@ -955,6 +959,11 @@ SwaggerOperation.prototype.urlify = function(args) {
   }
   if ((queryParams != null) && queryParams.length > 0)
     url += '?' + queryParams;
+    
+  if (url.substring(0, 4) != 'http') {
+    return "http://" + document.location.host + url
+  }
+
   return url;
 };
 
