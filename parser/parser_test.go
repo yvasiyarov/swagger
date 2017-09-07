@@ -45,7 +45,7 @@ func (suite *ParserSuite) SetupSuite() {
 		}
 
 		initialisedParser2.ParseGeneralApiInfo(path.Join(gopath, "src", "github.com/yvasiyarov/swagger/example/web/main.go"))
-		initialisedParser2.ParseApi("github.com/yvasiyarov/swagger/example")
+		initialisedParser2.ParseApi("github.com/yvasiyarov/swagger/example", "")
 	}
 	suite.parser = initialisedParser2
 }
