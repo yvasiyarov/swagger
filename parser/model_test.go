@@ -1,12 +1,13 @@
 package parser_test
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
-	"github.com/yvasiyarov/swagger/parser"
 	"go/ast"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+	"github.com/yvasiyarov/swagger/parser"
 )
 
 type ModelSuite struct {
@@ -21,7 +22,11 @@ const ExamplePackageName = "github.com/yvasiyarov/swagger/example"
 
 func (suite *ModelSuite) SetupSuite() {
 	if initialisedParser == nil {
-		initialisedParser = parser.NewParser()
+		var err error
+
+		initialisedParser, err = parser.NewParser(apiPackages, "", "^$", "", false)
+		assert.NoError(suite.T(), err, "Unable to complete suite initialization")
+
 		initialisedParser.ParseTypeDefinitions(ExamplePackageName)
 	}
 	suite.parser = initialisedParser

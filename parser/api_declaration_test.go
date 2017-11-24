@@ -1,10 +1,11 @@
 package parser_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/yvasiyarov/swagger/parser"
-	"testing"
 )
 
 type ApiDeclarationSuite struct {
@@ -16,7 +17,9 @@ type ApiDeclarationSuite struct {
 }
 
 func (suite *ApiDeclarationSuite) SetupSuite() {
-	suite.parser = parser.NewParser()
+	var err error
+	suite.parser, err = parser.NewParser(apiPackages, "", "^$", "", false)
+	assert.NoError(suite.T(), err, "Unable to complete suite initialization")
 	suite.operation = parser.NewOperation(suite.parser, "test")
 	suite.operation2 = parser.NewOperation(suite.parser, "test")
 	suite.operation3 = parser.NewOperation(suite.parser, "test")

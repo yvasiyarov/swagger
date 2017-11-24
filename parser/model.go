@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"go/ast"
-	"log"
 	"reflect"
 	"regexp"
 	"strings"

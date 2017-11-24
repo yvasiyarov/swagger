@@ -3,16 +3,13 @@ package generator
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"go/ast"
-	"log"
 	"os"
 	"path"
-	"regexp"
 	"runtime"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yvasiyarov/swagger/markup"
 	"github.com/yvasiyarov/swagger/parser"
 )
@@ -21,7 +18,10 @@ const (
 	AVAILABLE_FORMATS = "go|gopkg|swagger|asciidoc|markdown|confluence"
 )
 
-var generatedFileTemplate = `
+var (
+	log = logrus.WithField("pkg", "generator")
+
+	generatedFileTemplate = `
 package main
 //This file is generated automatically. Do not try to edit it manually.
 
@@ -29,32 +29,14 @@ var resourceListingJson = {{resourceListing}}
 var apiDescriptionsJson = {{apiDescriptions}}
 `
 
-var generatedPkgTemplate = `
+	generatedPkgTemplate = `
 package {{packageName}}
 //This file is generated automatically. Do not try to edit it manually.
 
 var ResourceListingJson = {{resourceListing}}
 var ApiDescriptionsJson = {{apiDescriptions}}
 `
-
-// It must return true if funcDeclaration is controller. We will try to parse only comments before controllers
-func IsController(funcDeclaration *ast.FuncDecl, controllerClass string) bool {
-	if len(controllerClass) == 0 {
-		// Search every method
-		return true
-	}
-	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
-		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
-			receiverName := fmt.Sprint(starExpression.X)
-			matched, err := regexp.MatchString(string(controllerClass), receiverName)
-			if err != nil {
-				log.Fatalf("The -controllerClass argument is not a valid regular expression: %v\n", err)
-			}
-			return matched
-		}
-	}
-	return false
-}
+)
 
 func generateSwaggerDocs(parser *parser.Parser, outputSpec string, pkg bool) error {
 	fd, err := os.Create(path.Join(outputSpec, "docs.go"))
@@ -124,45 +106,33 @@ func generateSwaggerUiFiles(parser *parser.Parser, outputSpec string) error {
 	return nil
 }
 
-func InitParser(controllerClass, ignore string) *parser.Parser {
-	parser := parser.NewParser()
-
-	parser.ControllerClass = controllerClass
-	parser.IsController = IsController
-	parser.Ignore = ignore
-
-	parser.TypesImplementingMarshalInterface["NullString"] = "string"
-	parser.TypesImplementingMarshalInterface["NullInt64"] = "int"
-	parser.TypesImplementingMarshalInterface["NullFloat64"] = "float"
-	parser.TypesImplementingMarshalInterface["NullBool"] = "bool"
-
-	return parser
-}
-
 type Params struct {
 	ApiPackage, MainApiFile, OutputFormat, OutputSpec, ControllerClass, Ignore, VendoringPath string
-	ContentsTable, Models                                                      bool
+	ContentsTable, Models, DisableVendoring                                                   bool
 }
 
 func Run(params Params) error {
-	parser := InitParser(params.ControllerClass, params.Ignore)
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		return errors.New("Please, set $GOPATH environment variable\n")
+	parser, err := parser.NewParser(params.ApiPackage, params.ControllerClass, params.Ignore,
+		params.VendoringPath, params.DisableVendoring)
+	if err != nil {
+		return fmt.Errorf("Unable to initialize parser: %v", err)
 	}
 
 	log.Println("Start parsing")
 
 	//Support gopaths with multiple directories
-	dirs := strings.Split(gopath, ":")
+	dirs := strings.Split(parser.GoPath, ":")
 	if runtime.GOOS == "windows" {
-		dirs = strings.Split(gopath, ";")
+		dirs = strings.Split(parser.GoPath, ";")
 	}
+
 	found := false
 	for _, d := range dirs {
 		apifile := path.Join(d, "src", params.MainApiFile)
 		if _, err := os.Stat(apifile); err == nil {
 			parser.ParseGeneralApiInfo(apifile)
+
+			log.Debugf("Found entry point API file '%v'", apifile)
 			found = true
 			break // file found, exit the loop
 		}
@@ -171,17 +141,19 @@ func Run(params Params) error {
 		if _, err := os.Stat(params.MainApiFile); err == nil {
 			parser.ParseGeneralApiInfo(params.MainApiFile)
 		} else {
-			apifile := path.Join(gopath, "src", params.MainApiFile)
+			apifile := path.Join(parser.GoPath, "src", params.MainApiFile)
 			return fmt.Errorf("Could not find apifile %s to parse\n", apifile)
 		}
 	}
 
-	parser.ParseApi(params.ApiPackage, params.VendoringPath)
+	parser.ParseApi()
+
 	log.Println("Finish parsing")
 
-	var err error
-	confirmMsg := ""
+	var confirmMsg string
+
 	format := strings.ToLower(params.OutputFormat)
+
 	switch format {
 	case "go":
 		err = generateSwaggerDocs(parser, params.OutputSpec, false)

@@ -2,21 +2,26 @@ package parser
 
 import (
 	"encoding/json"
+	"fmt"
 	"go/ast"
 	goparser "go/parser"
 	"go/token"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/yvasiyarov/swagger/utils"
 )
 
-var vendoringPath string
+var (
+	log = logrus.WithField("pkg", "parser")
+)
 
 type Parser struct {
+	APIPackages                       []string
 	Listing                           *ResourceListing
 	TopLevelApis                      map[string]*ApiDeclaration
 	PackagesCache                     map[string]map[string]*ast.Package
@@ -27,21 +32,65 @@ type Parser struct {
 	BasePath, ControllerClass, Ignore string
 	IsController                      func(*ast.FuncDecl, string) bool
 	TypesImplementingMarshalInterface map[string]string
+
+	VendoringPath    string
+	DisableVendoring bool
+	GoRoot           string
+	GoPath           string
 }
 
-func NewParser() *Parser {
+// It must return true if funcDeclaration is controller. We will try to parse only comments before controllers
+func isController(funcDeclaration *ast.FuncDecl, controllerClass string) bool {
+	if len(controllerClass) == 0 {
+		// Search every method
+		return true
+	}
+	if funcDeclaration.Recv != nil && len(funcDeclaration.Recv.List) > 0 {
+		if starExpression, ok := funcDeclaration.Recv.List[0].Type.(*ast.StarExpr); ok {
+			receiverName := fmt.Sprint(starExpression.X)
+			matched, err := regexp.MatchString(string(controllerClass), receiverName)
+			if err != nil {
+				log.Fatalf("The -controllerClass argument is not a valid regular expression: %v\n", err)
+			}
+			return matched
+		}
+	}
+	return false
+}
+
+func NewParser(apiPackages, controllerClass, ignoreParam, vendoringPath string, disableVendoring bool) (*Parser, error) {
+	gopath, goroot, err := utils.GetGoVars()
+	if err != nil {
+		return nil, err
+	}
+
+	packages := strings.Split(apiPackages, ",")
+
 	return &Parser{
+		APIPackages: packages,
 		Listing: &ResourceListing{
 			Infos: Infomation{},
 			Apis:  make([]*ApiRef, 0),
 		},
-		PackagesCache:                     make(map[string]map[string]*ast.Package),
-		TopLevelApis:                      make(map[string]*ApiDeclaration),
-		TypeDefinitions:                   make(map[string]map[string]*ast.TypeSpec),
-		PackagePathCache:                  make(map[string]string),
-		PackageImports:                    make(map[string]map[string][]string),
-		TypesImplementingMarshalInterface: make(map[string]string),
-	}
+		IsController:     isController,
+		ControllerClass:  controllerClass,
+		Ignore:           ignoreParam,
+		VendoringPath:    vendoringPath,
+		DisableVendoring: disableVendoring,
+		GoPath:           gopath,
+		GoRoot:           goroot,
+		PackagesCache:    make(map[string]map[string]*ast.Package),
+		TopLevelApis:     make(map[string]*ApiDeclaration),
+		TypeDefinitions:  make(map[string]map[string]*ast.TypeSpec),
+		PackagePathCache: make(map[string]string),
+		PackageImports:   make(map[string]map[string][]string),
+		TypesImplementingMarshalInterface: map[string]string{
+			"NullString":  "string",
+			"NullInt64":   "int",
+			"NullFloat64": "float",
+			"NullBool":    "bool",
+		},
+	}, nil
 }
 
 func (parser *Parser) IsImplementMarshalInterface(typeName string) bool {
@@ -115,90 +164,79 @@ func (parser *Parser) CheckRealPackagePath(packagePath string) string {
 		packagePath = filepath.Join("vendor", packagePath)
 	}
 
-	pkgRealpath := ""
-	goVersion := runtime.Version()
-	// check if vendor is enabled for version GO 1.5 or 1.6
-	vendorEnable := true
-	if goVersion == "go1.5" || goVersion == "go1.6" {
-		if os.Getenv("GO15VENDOREXPERIMENT") == "0" {
-			vendorEnable = false
-		}
-	}
+	// Only check under vendor if it is not explicity disabled AND the package
+	// in question is not an API package
+	if !parser.DisableVendoring && !utils.StringSliceContains(parser.APIPackages, packagePath) {
+		var searchPaths []string
 
+		if parser.VendoringPath == "" {
+			// CWD
+			searchPaths = append(searchPaths, filepath.Join("vendor", packagePath))
 
-	// first check vendor folder, vendoring in GO 1.7 and greater is officially supported
-	// evaluate if the user specified a different vendor directory rather
-	// than using current working directory to find vendor
-	if vendorEnable {
-		var vendorPath string
-		if vendoringPath == "" {
-			vendorPath = filepath.Join("vendor", packagePath)
+			// $GOPATH/api_package/vendor/package_path
+			for _, apiPkg := range parser.APIPackages {
+				searchPaths = append(searchPaths, filepath.Join(parser.GoPath, "src", apiPkg, "vendor", packagePath))
+			}
 		} else {
-			vendorPath = fmt.Sprintf("%s/%s", vendoringPath, packagePath)
+			searchPaths = []string{
+				fmt.Sprintf("%s/%s", parser.VendoringPath, packagePath),
+			}
 		}
 
-		if evalutedPath, err := filepath.EvalSymlinks(vendorPath); err == nil {
-			if _, err := os.Stat(evalutedPath); err == nil {
-				pkgRealpath = evalutedPath
+		for _, path := range searchPaths {
+			if evaluatedPath, err := filepath.EvalSymlinks(path); err == nil {
+				if _, err := os.Stat(evaluatedPath); err == nil {
+					log.Debugf("Found pkg '%v' in vendor dir (%v)", packagePath, evaluatedPath)
+					parser.PackagePathCache[packagePath] = evaluatedPath
+					return evaluatedPath
+				}
 			}
 		}
 	}
 
 	// next, check GOPATH
-	if pkgRealpath == "" {
-		gopath := os.Getenv("GOPATH")
-		if gopath == "" {
-			log.Fatalf("Please, set $GOPATH environment variable\n")
-		}
-
-		gopathsList := filepath.SplitList(gopath)
-		for _, path := range gopathsList {
-			if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(path, "src", packagePath)); err == nil {
-				if _, err := os.Stat(evalutedPath); err == nil {
-					pkgRealpath = evalutedPath
-					break
-				}
+	gopathsList := filepath.SplitList(parser.GoPath)
+	for _, path := range gopathsList {
+		if evaluatedPath, err := filepath.EvalSymlinks(filepath.Join(path, "src", packagePath)); err == nil {
+			if _, err := os.Stat(evaluatedPath); err == nil {
+				log.Debugf("Found pkg '%v' in GOPATH (%v)", packagePath, evaluatedPath)
+				parser.PackagePathCache[packagePath] = evaluatedPath
+				return evaluatedPath
 			}
 		}
 	}
 
 	// next, check GOROOT (/src)
-	if pkgRealpath == "" {
-		goroot := filepath.Clean(runtime.GOROOT())
-		if goroot == "" {
-			log.Fatalf("Please, set $GOROOT environment variable\n")
-		}
-		if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(goroot, "src", packagePath)); err == nil {
-			if _, err := os.Stat(evalutedPath); err == nil {
-				pkgRealpath = evalutedPath
-			}
-		}
-
-		// next, check GOROOT (/src/pkg) (for golang < v1.4)
-		if pkgRealpath == "" {
-			if evalutedPath, err := filepath.EvalSymlinks(filepath.Join(goroot, "src", "pkg", packagePath)); err == nil {
-				if _, err := os.Stat(evalutedPath); err == nil {
-					pkgRealpath = evalutedPath
-				}
-			}
+	if evaluatedPath, err := filepath.EvalSymlinks(filepath.Join(parser.GoRoot, "src", packagePath)); err == nil {
+		if _, err := os.Stat(evaluatedPath); err == nil {
+			log.Debugf("Found pkg '%v' in GOROOT (%v)", packagePath, evaluatedPath)
+			parser.PackagePathCache[packagePath] = evaluatedPath
+			return evaluatedPath
 		}
 	}
 
-	parser.PackagePathCache[packagePath] = pkgRealpath
-	return pkgRealpath
+	// next, check GOROOT (/src/pkg) (for golang < v1.4)
+	if evaluatedPath, err := filepath.EvalSymlinks(filepath.Join(parser.GoRoot, "src", "pkg", packagePath)); err == nil {
+		if _, err := os.Stat(evaluatedPath); err == nil {
+			log.Debugf("Found pkg '%v' in GOROOT < v1.4 (%v)", packagePath, evaluatedPath)
+			parser.PackagePathCache[packagePath] = evaluatedPath
+			return evaluatedPath
+		}
+	}
+
+	return ""
 }
 
 func (parser *Parser) GetRealPackagePath(packagePath string) string {
 	pkgRealpath := parser.CheckRealPackagePath(packagePath)
 	if pkgRealpath == "" {
-		log.Fatalf("Can not find package %s \n", packagePath)
+		log.Fatalf("Can not find package %s", packagePath)
 	}
 
 	return pkgRealpath
 }
 
 func (parser *Parser) GetPackageAst(packagePath string) map[string]*ast.Package {
-	//log.Printf("Parse %s package\n", packagePath)
 	if cache, ok := parser.PackagesCache[packagePath]; ok {
 		return cache
 	} else {
@@ -255,32 +293,34 @@ func (parser *Parser) AddOperation(op *Operation) {
 	api.AddOperation(op)
 }
 
-func (parser *Parser) ParseApi(packageNames, vendorPath string) {
-	vendoringPath = vendorPath
-	packages := parser.ScanPackages(strings.Split(packageNames, ","))
+func (parser *Parser) ParseApi() {
+	packages := parser.ScanPackages()
+
 	for _, packageName := range packages {
 		parser.ParseTypeDefinitions(packageName)
 	}
+
 	for _, packageName := range packages {
 		parser.ParseApiDescription(packageName)
 	}
 }
 
-func (parser *Parser) ScanPackages(packages []string) []string {
-	res := make([]string, len(packages))
+func (parser *Parser) ScanPackages() []string {
+	var res []string
 	existsPackages := make(map[string]bool)
 
-	for _, packageName := range packages {
+	for _, packageName := range parser.APIPackages {
 		if v, ok := existsPackages[packageName]; !ok || v == false {
 			// Add package
 			existsPackages[packageName] = true
 			res = append(res, packageName)
+
 			// get it's real path
 			pkgRealPath := parser.GetRealPackagePath(packageName)
+
 			// Then walk
 			var walker filepath.WalkFunc = func(path string, info os.FileInfo, err error) error {
-				// avoid listing hidden directories with initial "_" names and vendor dir
-				if info.IsDir() && !strings.Contains(path, "/_") && !strings.Contains(path, "/vendor") {
+				if !isIgnorablePath(path, info) {
 					if idx := strings.Index(path, packageName); idx != -1 {
 						pack := path[idx:]
 						if v, ok := existsPackages[pack]; !ok || v == false {
@@ -291,14 +331,37 @@ func (parser *Parser) ScanPackages(packages []string) []string {
 				}
 				return nil
 			}
+
 			filepath.Walk(pkgRealPath, walker)
 		}
 	}
+
 	return res
+}
+
+func isIgnorablePath(path string, info os.FileInfo) bool {
+	if !info.IsDir() {
+		return true
+	}
+
+	ignorableContains := []string{
+		"/_",      // avoid hidden dirs with initial "_"
+		"/vendor", // anything that 'looks' like a vendor dir
+		"/.git",   // anything that 'looks' like a git dir
+	}
+
+	for _, i := range ignorableContains {
+		if strings.Contains(path, i) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (parser *Parser) ParseTypeDefinitions(packageName string) {
 	parser.CurrentPackage = packageName
+
 	pkgRealPath := parser.GetRealPackagePath(packageName)
 	//	log.Printf("Parse type definition of %#v\n", packageName)
 
