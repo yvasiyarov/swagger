@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"fmt"
+	
+	"github.com/spf13/afero"
 )
 
 var vendoringPath string
@@ -255,9 +257,47 @@ func (parser *Parser) AddOperation(op *Operation) {
 	api.AddOperation(op)
 }
 
+//ExpandPackageWildcards will expand github.com/dummy/* into all folders directly a sub-directory to github.com/dummy, only 1-level deep. And github.com/dummy/** will continue to transverse into all sub directories, n-levels deep.
+func (parser *Parser) ExpandPackageWildcards(packagePaths []string) []string {
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		log.Fatalf("Please, set $GOPATH environment variable\n")
+	}
+
+	relPaths := []string{}
+	for _, packagePath := range packagePaths {
+		pathWithoutWildcards := strings.TrimRight(packagePath, "*/")
+		pkgRealPath := parser.GetRealPackagePath(pathWithoutWildcards)
+
+		maxLevels := 0
+		if strings.HasSuffix(packagePath, "/*") {
+			maxLevels = 1
+		}
+		if strings.HasSuffix(packagePath, "/**") {
+			maxLevels = MaxLevelInfinity
+		}
+
+		pathExpander := &packagePathExpander{
+			maxLevels: maxLevels,
+		}
+		baseFS := afero.NewBasePathFs(afero.NewOsFs(), pkgRealPath)
+		err := pathExpander.WalkDir(baseFS)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		relPaths = append(relPaths, pathExpander.PrefixedRelativePaths(pathWithoutWildcards)...)
+	}
+
+	return relPaths
+}
+
 func (parser *Parser) ParseApi(packageNames, vendorPath string) {
 	vendoringPath = vendorPath
-	packages := parser.ScanPackages(strings.Split(packageNames, ","))
+	packagePaths := strings.Split(packageNames, ",")
+	expandedPaths := parser.ExpandPackageWildcards(packagePaths)
+	log.Printf("Expanded packages: %v", expandedPaths)
+	packages := parser.ScanPackages(expandedPaths)
 	for _, packageName := range packages {
 		parser.ParseTypeDefinitions(packageName)
 	}
