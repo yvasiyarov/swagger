@@ -2,15 +2,16 @@ package parser_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
-	"github.com/yvasiyarov/swagger/parser"
 	"go/ast"
-	//	"log"
+
 	"os"
 	"path"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+	"github.com/yvasiyarov/swagger/parser"
 )
 
 type ParserSuite struct {
@@ -31,10 +32,14 @@ func IsController(funcDeclaration *ast.FuncDecl, controllerClass string) bool {
 
 var initialisedParser2 *parser.Parser
 var exampleBasePath = "http://127.0.0.1:3000/"
+var apiPackages = "github.com/yvasiyarov/swagger/example"
 
 func (suite *ParserSuite) SetupSuite() {
 	if initialisedParser2 == nil {
-		initialisedParser2 = parser.NewParser()
+		var err error
+
+		initialisedParser2, err = parser.NewParser(apiPackages, "", "^$", "", false)
+		assert.NoError(suite.T(), err, "Unable to complete suite initialization")
 
 		initialisedParser2.BasePath = exampleBasePath
 		initialisedParser2.IsController = IsController
@@ -45,7 +50,7 @@ func (suite *ParserSuite) SetupSuite() {
 		}
 
 		initialisedParser2.ParseGeneralApiInfo(path.Join(gopath, "src", "github.com/yvasiyarov/swagger/example/web/main.go"))
-		initialisedParser2.ParseApi("github.com/yvasiyarov/swagger/example", "")
+		initialisedParser2.ParseApi()
 	}
 	suite.parser = initialisedParser2
 }

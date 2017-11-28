@@ -15,7 +15,9 @@ type OperationSuite struct {
 }
 
 func (suite *OperationSuite) SetupSuite() {
-	suite.parser = parser.NewParser()
+	var err error
+	suite.parser, err = parser.NewParser(apiPackages, "", "^$", "", false)
+	assert.NoError(suite.T(), err, "Unable to complete suite initialization")
 }
 
 func (suite *OperationSuite) TestNewApi() {
