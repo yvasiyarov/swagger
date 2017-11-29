@@ -44,7 +44,7 @@ _This tool currently generates Swagger 1.x spec files -- there are plans to upda
 |------------------|---------------------------|    
 | **-apiPackage**  | Package with API controllers implementation |
 | **-mainApiFile** | Main API file. This file is used for generating the "General API Info" bits. If `-mainApiFile` is not specified, then `$apiPackage/main.go` is assumed. | 
-| **-format**      | One of: `go|swagger|asciidoc|markdown|confluence`. Default is `-format="go"`. See See [docs](https://github.com/yvasiyarov/swagger/wiki/Generate-Different-Formats). |
+| **-format**      | One of `go\|swagger\|asciidoc\|markdown\|confluence`. Default is `-format="go"`. See [docs](https://github.com/yvasiyarov/swagger/wiki/Generate-Different-Formats). |
 | **-output**     | Output specification. Default varies according to -format. See [docs](https://github.com/yvasiyarov/swagger/wiki/Generate-Different-Formats). |
 | **controllerClass**  | Speed up parsing by specifying which receiver objects have the controller methods. The default is to search all methods. The argument can be a regular expression. For example, `-controllerClass="(Context|Controller)$"` means the receiver name must end in Context or Controller. |
 | **contentsTable**     | Whether to generate Table of Contents; default: `true`. |
